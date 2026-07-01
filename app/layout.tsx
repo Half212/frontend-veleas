@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { EB_Garamond, Libre_Franklin, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image";
+import NavLinks from "@/components/NavLinks";
 import "./globals.css";
 
 const ebGaramond = EB_Garamond({
@@ -38,13 +39,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          rel="stylesheet"
-        />
-      </head>
       <body className={`${ebGaramond.variable} ${libreFranklin.variable} ${sourceSerif4.variable} bg-background text-on-background min-h-screen flex flex-col font-body-md relative`}>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          precedence="default"
+        />
         
         {/* Fundo Dinâmico com Imagens Mescladas */}
         <div className="fixed inset-0 z-[-1] pointer-events-none opacity-10 mix-blend-multiply flex flex-col md:flex-row">
@@ -77,10 +77,7 @@ export default function RootLayout({
             </div>
 
             <div className="w-full md:w-auto md:flex md:order-2 flex justify-center gap-6 mt-4 md:mt-0 overflow-x-auto">
-              <Link href="/" className="font-label-lg text-[14px] md:text-[16px] text-heritage-red border-b border-heritage-red pb-1 whitespace-nowrap">Home</Link>
-              <Link href="/historia" className="font-label-lg text-[14px] md:text-[16px] text-deep-earth/70 hover:text-heritage-red transition-colors duration-300 whitespace-nowrap">Nossa História</Link>
-              <Link href="/loja" className="font-label-lg text-[14px] md:text-[16px] text-deep-earth/70 hover:text-heritage-red transition-colors duration-300 whitespace-nowrap">Loja</Link>
-             
+              <NavLinks />
             </div>
           </div>
         </nav>

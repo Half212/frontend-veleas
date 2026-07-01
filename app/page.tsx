@@ -1,5 +1,6 @@
 import ProductCarousel from '@/components/productCarousel';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -85,9 +86,9 @@ export default function Home() {
               <p className="font-body-lg text-on-surface-variant mb-6 leading-relaxed">
                 A história da Velas São João começa numa pequena oficina, onde o calor da cera derretida se misturava ao aroma de devoção. Por gerações, mantemos o compromisso com o fazer manual.
               </p>
-              <a href="#" className="inline-flex items-center text-heritage-red font-label-lg uppercase tracking-widest hover:text-primary-container transition-colors">
+              <Link href="/historia" className="inline-flex items-center text-heritage-red font-label-lg uppercase tracking-widest hover:text-primary-container transition-colors">
                 Ler nossa história completa <span className="material-symbols-outlined ml-2 text-[18px]">menu_book</span>
-              </a>
+              </Link>
             </div>
           </div>
 
