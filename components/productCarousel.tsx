@@ -14,7 +14,7 @@ const slides = [
   {
     image: "/images/velaartesanal.jpeg", // Certifique-se de ter as imagens em /public/images
     title: "Velas Artesanais de Cera de Abelha",
-    description: "Pureza e calor natural para o seu lar."
+    description: "Desde 1938 iluminando ambientes e momentos especiais."
   },
   {
     image: "/images/velaartesanal2.jpeg",
