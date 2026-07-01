@@ -89,14 +89,10 @@ export default function RootLayout({
         {children}
 
         {/* Footer Global */}
-        <footer className="w-full py-16 px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-4 gap-gutter max-w-max-width mx-auto border-t border-golden-honey/30 bg-wax-cream mt-auto">
+        <footer className="w-full py-14 px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-1 gap-gutter max-w-max-width mx-auto border-t border-golden-honey/30 bg-wax-cream mt-auto">
           <div className="md:col-span-1">
             <h2 className="font-display-lg text-[24px] text-heritage-red mb-4">Velas São João</h2>
-            <p className="font-body-md text-deep-earth/80">© 2024 Velas São João. Artesanato em Cera desde 1922.</p>
-          </div>
-          <div className="md:col-span-3 flex flex-wrap gap-8 md:justify-end items-start mt-8 md:mt-0">
-            <a href="#" className="font-label-sm text-label-sm uppercase text-deep-earth/80 hover:text-heritage-red transition-colors">Nossas Lojas</a>
-            <a href="#" className="font-label-sm text-label-sm uppercase text-deep-earth/80 hover:text-heritage-red transition-colors">Atendimento</a>
+            <p className="font-body-md text-deep-earth/80">© 2026 Velas São João. Artesanato em Cera desde 1922.</p>
           </div>
         </footer>
       </body>
