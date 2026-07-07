@@ -40,7 +40,7 @@ export default function HistoriaPage() {
 
           <div className="bg-surface-container p-8 md:p-10 rounded-[18px] border-l-4 border-heritage-red my-12 shadow-sm">
             <p className="font-body-lg text-deep-earth italic text-lg md:text-xl">
-              "Nossa missão nunca foi apenas vender velas, mas entregar luz e fé em forma de artesanato para cada lar."
+              &quot;Nossa missão nunca foi apenas vender velas, mas entregar luz e fé em forma de artesanato para cada lar.&quot;
             </p>
           </div>
 

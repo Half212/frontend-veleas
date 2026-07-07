@@ -68,9 +68,9 @@ export default function RootLayout({
             </Link>
             
             <div className="flex md:order-3 gap-3 md:gap-4 items-center text-heritage-red">
-              <button aria-label="account_circle" className="hover:text-heritage-red transition-all duration-300">
+              <Link href="/login" aria-label="account_circle" className="hover:text-heritage-red transition-all duration-300">
                 <span className="material-symbols-outlined text-[24px] md:text-[28px]">account_circle</span>
-              </button>
+              </Link>
               <button aria-label="shopping_bag" className="hover:text-heritage-red transition-all duration-300">
                 <span className="material-symbols-outlined text-[24px] md:text-[28px]">shopping_bag</span>
               </button>
