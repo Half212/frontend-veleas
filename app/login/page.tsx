@@ -14,8 +14,10 @@ export default function Login() {
     senha: "",
     confirmaSenha: "",
   });
-
+  const [isLoginMode, setIsLoginMode] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsClient(true);
     // Se já estiver logado, redireciona para a loja
     if (localStorage.getItem("isLoggedIn") === "true") {
@@ -28,16 +30,62 @@ export default function Login() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.senha !== formData.confirmaSenha) {
-      alert("As senhas não coincidem!");
-      return;
+    setErrorMsg("");
+
+    try {
+      if (isLoginMode) {
+        // Modo Login
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.senha,
+          }),
+        });
+
+        if (!res.ok) throw new Error("Credenciais inválidas");
+        const data = await res.json();
+        
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("userName", data.name);
+        router.push("/loja");
+      } else {
+        // Modo Cadastro
+        if (formData.senha !== formData.confirmaSenha) {
+          setErrorMsg("As senhas não coincidem!");
+          return;
+        }
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.nome,
+            email: formData.email,
+            phone: formData.celular,
+            password: formData.senha,
+            confirmPassword: formData.confirmaSenha,
+            roleId: 3 // COMMON ROLE
+          }),
+        });
+
+        if (!res.ok) throw new Error("Erro ao criar conta. O email já pode estar em uso.");
+        const data = await res.json();
+
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("userName", data.name);
+        router.push("/loja");
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErrorMsg(err.message);
+      } else {
+        setErrorMsg(String(err));
+      }
     }
-    // Simula o login/cadastro salvando no localStorage
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("userName", formData.nome);
-    router.push("/loja");
   };
 
   if (!isClient) return null; // Evita hidration error com router no client-side
@@ -57,23 +105,47 @@ export default function Login() {
           <p className="font-body-md text-deep-earth/80">
             Cadastre-se ou faça login para continuar sua compra.
           </p>
+          <div className="mt-4 flex justify-center gap-4">
+            <button 
+              type="button"
+              onClick={() => setIsLoginMode(false)}
+              className={`font-label-sm uppercase tracking-widest pb-1 border-b-2 transition-colors ${!isLoginMode ? 'border-heritage-red text-heritage-red' : 'border-transparent text-on-surface-variant hover:text-deep-earth'}`}
+            >
+              Criar Conta
+            </button>
+            <button 
+              type="button"
+              onClick={() => setIsLoginMode(true)}
+              className={`font-label-sm uppercase tracking-widest pb-1 border-b-2 transition-colors ${isLoginMode ? 'border-heritage-red text-heritage-red' : 'border-transparent text-on-surface-variant hover:text-deep-earth'}`}
+            >
+              Já tenho conta
+            </button>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block font-label-sm text-on-surface-variant mb-2 uppercase tracking-wider text-[11px] font-semibold">
-              Nome Completo
-            </label>
-            <input
-              type="text"
-              name="nome"
-              value={formData.nome}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 bg-surface/50 border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red focus:ring-1 focus:ring-heritage-red transition-all text-on-background font-body-md"
-              placeholder="Digite seu nome completo"
-            />
+        {errorMsg && (
+          <div className="mb-6 p-3 bg-red-100 border border-red-300 text-red-700 rounded text-center font-body-md">
+            {errorMsg}
           </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {!isLoginMode && (
+            <div>
+              <label className="block font-label-sm text-on-surface-variant mb-2 uppercase tracking-wider text-[11px] font-semibold">
+                Nome Completo
+              </label>
+              <input
+                type="text"
+                name="nome"
+                value={formData.nome}
+                onChange={handleChange}
+                required={!isLoginMode}
+                className="w-full px-4 py-3 bg-surface/50 border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red focus:ring-1 focus:ring-heritage-red transition-all text-on-background font-body-md"
+                placeholder="Digite seu nome completo"
+              />
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -91,20 +163,22 @@ export default function Login() {
               />
             </div>
 
-            <div>
-              <label className="block font-label-sm text-on-surface-variant mb-2 uppercase tracking-wider text-[11px] font-semibold">
-                Celular
-              </label>
-              <input
-                type="tel"
-                name="celular"
-                value={formData.celular}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 bg-surface/50 border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red focus:ring-1 focus:ring-heritage-red transition-all text-on-background font-body-md"
-                placeholder="(00) 00000-0000"
-              />
-            </div>
+            {!isLoginMode && (
+              <div>
+                <label className="block font-label-sm text-on-surface-variant mb-2 uppercase tracking-wider text-[11px] font-semibold">
+                  Celular
+                </label>
+                <input
+                  type="tel"
+                  name="celular"
+                  value={formData.celular}
+                  onChange={handleChange}
+                  required={!isLoginMode}
+                  className="w-full px-4 py-3 bg-surface/50 border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red focus:ring-1 focus:ring-heritage-red transition-all text-on-background font-body-md"
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -123,20 +197,22 @@ export default function Login() {
               />
             </div>
 
-            <div>
-              <label className="block font-label-sm text-on-surface-variant mb-2 uppercase tracking-wider text-[11px] font-semibold">
-                Confirmar Senha
-              </label>
-              <input
-                type="password"
-                name="confirmaSenha"
-                value={formData.confirmaSenha}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 bg-surface/50 border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red focus:ring-1 focus:ring-heritage-red transition-all text-on-background font-body-md"
-                placeholder="••••••••"
-              />
-            </div>
+            {!isLoginMode && (
+              <div>
+                <label className="block font-label-sm text-on-surface-variant mb-2 uppercase tracking-wider text-[11px] font-semibold">
+                  Confirmar Senha
+                </label>
+                <input
+                  type="password"
+                  name="confirmaSenha"
+                  value={formData.confirmaSenha}
+                  onChange={handleChange}
+                  required={!isLoginMode}
+                  className="w-full px-4 py-3 bg-surface/50 border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red focus:ring-1 focus:ring-heritage-red transition-all text-on-background font-body-md"
+                  placeholder="••••••••"
+                />
+              </div>
+            )}
           </div>
 
           <button
