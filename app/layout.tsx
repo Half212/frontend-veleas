@@ -63,15 +63,15 @@ export default function RootLayout({
           </div>
 
           {/* Navbar Global */}
-          <nav className="fixed top-0 left-0 w-full z-50 bg-wax-cream/95 border-b border-golden-honey/20 backdrop-blur-md">
+          <nav className="fixed top-0 left-0 w-full z-50 bg-surface/95 border-b border-brand-dark-200/80 backdrop-blur-md transition-all">
             <div className="flex flex-wrap justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-max-width mx-auto">
-              <Link href="/" className="flex items-center gap-2 md:gap-3 font-display-lg text-[28px] md:text-[48px] text-saojoao uppercase tracking-widest hover:text-saojoao transition-all duration-300">
-                <Image src="/images/logo.svg" alt="Logo Velas São João" width={56} height={56} className="w-10 h-10 md:w-14 md:h-14 object-cover" />
+              <Link href="/" className="flex items-center gap-2 md:gap-3 font-display-lg text-[28px] md:text-[38px] text-brand-green-900 uppercase tracking-widest hover:text-brand-green-700 transition-all duration-300">
+                <Image src="/images/logo.svg" alt="Logo Velas São João" width={48} height={48} className="w-9 h-9 md:w-12 md:h-12 object-contain" />
                 São João
               </Link>
               
-              <div className="flex md:order-3 gap-3 md:gap-4 items-center text-heritage-red">
-                <Link href="/login" aria-label="account_circle" className="hover:text-heritage-red transition-all duration-300">
+              <div className="flex md:order-3 gap-3 md:gap-4 items-center text-brand-green-900">
+                <Link href="/login" aria-label="account_circle" className="hover:text-brand-green-700 transition-all duration-300 flex items-center justify-center p-1">
                   <span className="material-symbols-outlined text-[24px] md:text-[28px]">account_circle</span>
                 </Link>
                 <NavbarCartButton />
@@ -89,11 +89,44 @@ export default function RootLayout({
           {/* Modal Lateral do Carrinho */}
           <CartModal />
 
-          {/* Footer Global */}
-          <footer className="w-full py-14 px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-1 gap-gutter max-w-max-width mx-auto border-t border-golden-honey/30 bg-wax-cream mt-auto">
-            <div className="md:col-span-1">
-              <h2 className="font-display-lg text-[24px] text-heritage-red mb-4">Velas São João</h2>
-              <p className="font-body-md text-deep-earth/80">© 2026 Velas São João. Artesanato em Cera desde 1922.</p>
+          {/* Footer Global Nobre */}
+          <footer className="w-full py-16 px-margin-mobile md:px-margin-desktop bg-brand-dark-900 text-brand-dark-100 mt-auto border-t border-brand-green-800/40">
+            <div className="max-w-max-width mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <Image src="/images/logo.svg" alt="Logo Velas São João" width={40} height={40} className="w-10 h-10 object-contain brightness-200" />
+                  <h2 className="font-display-lg text-[28px] text-white tracking-wider">Velas São João</h2>
+                </div>
+                <p className="font-body-md text-brand-dark-300 max-w-sm leading-relaxed">
+                  Tradição, fé e elegância desde 1938 Velas artesanais criadas com maestria para iluminar seus momentos mais sagrados e acolhedores.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-label-lg text-white uppercase tracking-widest text-sm mb-4">Navegação Rápida</h3>
+                <ul className="space-y-2 font-body-md text-brand-dark-300">
+                  <li><Link href="/" className="hover:text-white transition-colors">Início</Link></li>
+                  <li><Link href="/loja" className="hover:text-white transition-colors">Nossa Loja</Link></li>
+                  <li><Link href="/historia" className="hover:text-white transition-colors">Nossa História</Link></li>
+                  <li><Link href="/login" className="hover:text-white transition-colors">Minha Conta</Link></li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-label-lg text-white uppercase tracking-widest text-sm mb-4">Atendimento & Tradição</h3>
+                <p className="font-body-md text-brand-dark-300 leading-relaxed mb-3">
+                  <strong className="text-white">Loja Matriz:</strong> Cidade Velha, Belém - PA<br />
+                  <strong className="text-white">Filial:</strong> Shopping Pátio Belém
+                </p>
+                <span className="inline-block text-xs uppercase tracking-wider text-accent-gold font-label-sm border border-accent-gold/40 px-3 py-1 rounded">
+                  Qualidade Garantida & 100% Cera Artesanal
+                </span>
+              </div>
+            </div>
+
+            <div className="max-w-max-width mx-auto mt-12 pt-6 border-t border-brand-dark-800 text-center md:flex md:justify-between font-body-md text-sm text-brand-dark-400">
+              <p>© 2026 Velas São João. Todos os direitos reservados.</p>
+              <p className="mt-2 md:mt-0">Confiança, Elegância & Credibilidade.</p>
             </div>
           </footer>
         </CartProvider>

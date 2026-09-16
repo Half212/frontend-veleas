@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+
 export default function Login() {
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
@@ -37,7 +39,7 @@ export default function Login() {
     try {
       if (isLoginMode) {
         // Modo Login
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/login`, {
+        const res = await fetch(`${API_URL}/users/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -51,6 +53,7 @@ export default function Login() {
         
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("userName", data.name);
+        localStorage.setItem("userRole", data.roleName || "ROLE_COMMON");
         router.push("/loja");
       } else {
         // Modo Cadastro
@@ -59,7 +62,7 @@ export default function Login() {
           return;
         }
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+        const res = await fetch(`${API_URL}/users`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -77,6 +80,7 @@ export default function Login() {
 
         localStorage.setItem("isLoggedIn", "true");
         localStorage.setItem("userName", data.name);
+        localStorage.setItem("userRole", data.roleName || "ROLE_COMMON");
         router.push("/loja");
       }
     } catch (err: unknown) {
@@ -91,48 +95,48 @@ export default function Login() {
   if (!isClient) return null; // Evita hidration error com router no client-side
 
   return (
-    <main className="min-h-[85vh] pt-32 pb-16 px-margin-mobile md:px-margin-desktop flex items-center justify-center relative">
-      <div className="absolute inset-0 z-[-1] pointer-events-none opacity-20">
-         <Image src="/images/velaartesanal.jpeg" alt="" fill className="object-cover opacity-30 mix-blend-multiply" />
+    <main className="min-h-[85vh] pt-28 pb-16 px-margin-mobile md:px-margin-desktop flex items-center justify-center relative bg-brand-dark-50/60">
+      <div className="absolute inset-0 z-[-1] pointer-events-none opacity-10">
+         <Image src="/images/velaartesanal.jpeg" alt="" fill className="object-cover mix-blend-multiply" />
       </div>
       
-      <div className="w-full max-w-xl bg-wax-cream/95 backdrop-blur-md p-8 md:p-12 rounded-lg shadow-2xl border border-golden-honey/30 relative overflow-hidden">
-        {/* Decorative top border */}
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-heritage-red via-golden-honey to-saojoao"></div>
+      <div className="w-full max-w-xl bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-brand-dark-200 relative overflow-hidden">
+        {/* Top decorative line */}
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-green-900 via-brand-green-700 to-accent-gold"></div>
         
-        <div className="text-center mb-10">
-          <h1 className="font-display-lg text-4xl text-heritage-red mb-3">Identificação</h1>
-          <p className="font-body-md text-deep-earth/80">
-            Cadastre-se ou faça login para continuar sua compra.
+        <div className="text-center mb-8">
+          <h1 className="font-display-lg text-3xl md:text-4xl text-brand-dark-950 font-bold mb-2">Identificação</h1>
+          <p className="font-body-md text-brand-dark-600">
+            Cadastre-se ou faça login para continuar sua experiência.
           </p>
-          <div className="mt-4 flex justify-center gap-4">
+          <div className="mt-6 flex justify-center gap-6 border-b border-brand-dark-200 pb-3">
             <button 
               type="button"
               onClick={() => setIsLoginMode(false)}
-              className={`font-label-sm uppercase tracking-widest pb-1 border-b-2 transition-colors ${!isLoginMode ? 'border-heritage-red text-heritage-red' : 'border-transparent text-on-surface-variant hover:text-deep-earth'}`}
+              className={`font-label-sm uppercase tracking-widest pb-2 border-b-2 font-bold transition-all text-xs md:text-sm ${!isLoginMode ? 'border-brand-green-900 text-brand-green-900' : 'border-transparent text-brand-dark-400 hover:text-brand-dark-800'}`}
             >
-              Criar Conta
+              Criar Nova Conta
             </button>
             <button 
               type="button"
               onClick={() => setIsLoginMode(true)}
-              className={`font-label-sm uppercase tracking-widest pb-1 border-b-2 transition-colors ${isLoginMode ? 'border-heritage-red text-heritage-red' : 'border-transparent text-on-surface-variant hover:text-deep-earth'}`}
+              className={`font-label-sm uppercase tracking-widest pb-2 border-b-2 font-bold transition-all text-xs md:text-sm ${isLoginMode ? 'border-brand-green-900 text-brand-green-900' : 'border-transparent text-brand-dark-400 hover:text-brand-dark-800'}`}
             >
-              Já tenho conta
+              Já Possuo Conta
             </button>
           </div>
         </div>
 
         {errorMsg && (
-          <div className="mb-6 p-3 bg-red-100 border border-red-300 text-red-700 rounded text-center font-body-md">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-center font-body-md text-sm">
             {errorMsg}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {!isLoginMode && (
             <div>
-              <label className="block font-label-sm text-on-surface-variant mb-2 uppercase tracking-wider text-[11px] font-semibold">
+              <label className="block font-label-sm text-brand-dark-700 mb-2 uppercase tracking-wider text-[11px] font-bold">
                 Nome Completo
               </label>
               <input
@@ -141,15 +145,15 @@ export default function Login() {
                 value={formData.nome}
                 onChange={handleChange}
                 required={!isLoginMode}
-                className="w-full px-4 py-3 bg-surface/50 border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red focus:ring-1 focus:ring-heritage-red transition-all text-on-background font-body-md"
+                className="w-full px-4 py-3 bg-brand-dark-50/50 border border-brand-dark-300 rounded-xl focus:outline-none focus:border-brand-green-800 focus:ring-1 focus:ring-brand-green-800 transition-all text-brand-dark-900 font-body-md"
                 placeholder="Digite seu nome completo"
               />
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block font-label-sm text-on-surface-variant mb-2 uppercase tracking-wider text-[11px] font-semibold">
+              <label className="block font-label-sm text-brand-dark-700 mb-2 uppercase tracking-wider text-[11px] font-bold">
                 E-mail
               </label>
               <input
@@ -158,14 +162,14 @@ export default function Login() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-surface/50 border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red focus:ring-1 focus:ring-heritage-red transition-all text-on-background font-body-md"
+                className="w-full px-4 py-3 bg-brand-dark-50/50 border border-brand-dark-300 rounded-xl focus:outline-none focus:border-brand-green-800 focus:ring-1 focus:ring-brand-green-800 transition-all text-brand-dark-900 font-body-md"
                 placeholder="seu@email.com"
               />
             </div>
 
             {!isLoginMode && (
               <div>
-                <label className="block font-label-sm text-on-surface-variant mb-2 uppercase tracking-wider text-[11px] font-semibold">
+                <label className="block font-label-sm text-brand-dark-700 mb-2 uppercase tracking-wider text-[11px] font-bold">
                   Celular
                 </label>
                 <input
@@ -174,16 +178,16 @@ export default function Login() {
                   value={formData.celular}
                   onChange={handleChange}
                   required={!isLoginMode}
-                  className="w-full px-4 py-3 bg-surface/50 border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red focus:ring-1 focus:ring-heritage-red transition-all text-on-background font-body-md"
+                  className="w-full px-4 py-3 bg-brand-dark-50/50 border border-brand-dark-300 rounded-xl focus:outline-none focus:border-brand-green-800 focus:ring-1 focus:ring-brand-green-800 transition-all text-brand-dark-900 font-body-md"
                   placeholder="(00) 00000-0000"
                 />
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block font-label-sm text-on-surface-variant mb-2 uppercase tracking-wider text-[11px] font-semibold">
+              <label className="block font-label-sm text-brand-dark-700 mb-2 uppercase tracking-wider text-[11px] font-bold">
                 Senha
               </label>
               <input
@@ -192,14 +196,14 @@ export default function Login() {
                 value={formData.senha}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 bg-surface/50 border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red focus:ring-1 focus:ring-heritage-red transition-all text-on-background font-body-md"
+                className="w-full px-4 py-3 bg-brand-dark-50/50 border border-brand-dark-300 rounded-xl focus:outline-none focus:border-brand-green-800 focus:ring-1 focus:ring-brand-green-800 transition-all text-brand-dark-900 font-body-md"
                 placeholder="••••••••"
               />
             </div>
 
             {!isLoginMode && (
               <div>
-                <label className="block font-label-sm text-on-surface-variant mb-2 uppercase tracking-wider text-[11px] font-semibold">
+                <label className="block font-label-sm text-brand-dark-700 mb-2 uppercase tracking-wider text-[11px] font-bold">
                   Confirmar Senha
                 </label>
                 <input
@@ -208,7 +212,7 @@ export default function Login() {
                   value={formData.confirmaSenha}
                   onChange={handleChange}
                   required={!isLoginMode}
-                  className="w-full px-4 py-3 bg-surface/50 border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red focus:ring-1 focus:ring-heritage-red transition-all text-on-background font-body-md"
+                  className="w-full px-4 py-3 bg-brand-dark-50/50 border border-brand-dark-300 rounded-xl focus:outline-none focus:border-brand-green-800 focus:ring-1 focus:ring-brand-green-800 transition-all text-brand-dark-900 font-body-md"
                   placeholder="••••••••"
                 />
               </div>
@@ -217,9 +221,9 @@ export default function Login() {
 
           <button
             type="submit"
-            className="w-full bg-heritage-red text-wax-cream font-label-lg uppercase tracking-widest py-4 mt-6 hover:bg-saojoao transition-colors duration-300 rounded shadow-md flex justify-center items-center gap-2"
+            className="w-full bg-brand-green-900 text-white font-label-lg uppercase tracking-widest py-4 mt-6 hover:bg-brand-green-800 transition-all duration-300 rounded-xl shadow-md hover:shadow-lg flex justify-center items-center gap-2 font-bold"
           >
-            Acessar
+            {isLoginMode ? "Entrar na Conta" : "Criar Minha Conta"}
             <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
           </button>
         </form>

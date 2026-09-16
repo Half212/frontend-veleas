@@ -69,24 +69,24 @@ export default function CartModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-sm flex justify-end transition-opacity animate-fadeIn">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-brand-dark-950/70 backdrop-blur-sm flex justify-end transition-opacity animate-fadeIn">
       <div
-        className="w-full max-w-md bg-wax-cream h-full flex flex-col shadow-2xl border-l border-golden-honey/30 transform transition-transform duration-300 ease-in-out"
+        className="w-full max-w-md bg-white h-full flex flex-col shadow-2xl border-l border-brand-green-200 transform transition-transform duration-300 ease-in-out"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-6 border-b border-golden-honey/30 flex items-center justify-between bg-surface-container/50">
+        <div className="p-6 border-b border-brand-dark-200/80 flex items-center justify-between bg-brand-green-50/50">
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-heritage-red text-2xl">
+            <span className="material-symbols-outlined text-brand-green-900 text-2xl">
               shopping_bag
             </span>
-            <h2 className="font-display-lg text-2xl text-heritage-red">
+            <h2 className="font-display-lg text-2xl text-brand-green-900 font-bold">
               Seu Carrinho ({totalItems})
             </h2>
           </div>
           <button
             onClick={() => setIsCartOpen(false)}
-            className="p-2 text-deep-earth/60 hover:text-heritage-red rounded-full transition-colors"
+            className="p-2 text-brand-dark-500 hover:text-brand-green-900 hover:bg-brand-green-100 rounded-full transition-colors"
             aria-label="Fechar"
           >
             <span className="material-symbols-outlined text-2xl">close</span>
@@ -96,12 +96,12 @@ export default function CartModal() {
         {/* Items List */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {cart.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center text-deep-earth/70">
-              <span className="material-symbols-outlined text-6xl text-golden-honey/60 mb-3">
+            <div className="h-full flex flex-col items-center justify-center text-center text-brand-dark-500">
+              <span className="material-symbols-outlined text-6xl text-brand-green-300 mb-3">
                 remove_shopping_cart
               </span>
-              <p className="font-display-md text-xl mb-2">Seu carrinho está vazio</p>
-              <p className="font-body-md text-sm text-deep-earth/60">
+              <p className="font-display-md text-xl text-brand-dark-800 mb-2">Seu carrinho está vazio</p>
+              <p className="font-body-md text-sm text-brand-dark-500 max-w-xs">
                 Explore nosso catálogo e adicione velas artesanais ao seu pedido.
               </p>
             </div>
@@ -109,9 +109,9 @@ export default function CartModal() {
             cart.map((item) => (
               <div
                 key={item.id}
-                className="bg-surface p-4 rounded-lg border border-golden-honey/30 flex gap-4 items-center shadow-sm"
+                className="bg-brand-dark-50/40 p-4 rounded-xl border border-brand-dark-200 flex gap-4 items-center shadow-sm"
               >
-                <div className="relative w-16 h-16 rounded overflow-hidden flex-shrink-0 bg-surface-container-high">
+                <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-brand-green-100">
                   <Image
                     src={item.image || "/images/velaartesanal.jpeg"}
                     alt={item.name}
@@ -121,10 +121,10 @@ export default function CartModal() {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-display-lg text-lg text-saojoao truncate">
+                  <h3 className="font-display-lg text-lg text-brand-dark-900 truncate">
                     {item.name}
                   </h3>
-                  <p className="font-label-md text-heritage-red font-semibold">
+                  <p className="font-label-md text-brand-green-800 font-bold">
                     {new Intl.NumberFormat("pt-BR", {
                       style: "currency",
                       currency: "BRL",
@@ -135,16 +135,16 @@ export default function CartModal() {
                   <div className="flex items-center gap-2 mt-2">
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-7 h-7 rounded border border-golden-honey/50 flex items-center justify-center text-deep-earth hover:bg-golden-honey/20 transition-colors"
+                      className="w-7 h-7 rounded border border-brand-dark-300 flex items-center justify-center text-brand-dark-700 hover:bg-brand-green-100 transition-colors"
                     >
                       <span className="material-symbols-outlined text-sm">remove</span>
                     </button>
-                    <span className="font-label-md px-2 text-deep-earth font-semibold">
+                    <span className="font-label-md px-2 text-brand-dark-900 font-semibold">
                       {item.quantity}
                     </span>
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-7 h-7 rounded border border-golden-honey/50 flex items-center justify-center text-deep-earth hover:bg-golden-honey/20 transition-colors"
+                      className="w-7 h-7 rounded border border-brand-dark-300 flex items-center justify-center text-brand-dark-700 hover:bg-brand-green-100 transition-colors"
                     >
                       <span className="material-symbols-outlined text-sm">add</span>
                     </button>
@@ -153,7 +153,7 @@ export default function CartModal() {
 
                 <button
                   onClick={() => removeFromCart(item.id)}
-                  className="text-red-500 hover:text-red-700 p-1"
+                  className="text-red-500 hover:text-red-700 p-1 transition-colors"
                   title="Remover"
                 >
                   <span className="material-symbols-outlined text-xl">delete</span>
@@ -165,11 +165,11 @@ export default function CartModal() {
 
         {/* Footer Checkout Controls */}
         {cart.length > 0 && (
-          <div className="p-6 border-t border-golden-honey/30 bg-surface-container/30 space-y-4">
+          <div className="p-6 border-t border-brand-dark-200 bg-brand-green-50/40 space-y-4">
             {/* Customer Inputs */}
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-label-sm text-deep-earth uppercase tracking-wider mb-1">
+                <label className="block text-xs font-label-sm text-brand-dark-700 uppercase tracking-wider mb-1">
                   Seu Nome
                 </label>
                 <input
@@ -177,18 +177,18 @@ export default function CartModal() {
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Nome completo"
-                  className="w-full px-3 py-2 text-sm bg-surface border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red text-deep-earth"
+                  className="w-full px-3 py-2 text-sm bg-white border border-brand-dark-300 rounded-lg focus:outline-none focus:border-brand-green-700 text-brand-dark-900"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-label-sm text-deep-earth uppercase tracking-wider mb-1">
+                <label className="block text-xs font-label-sm text-brand-dark-700 uppercase tracking-wider mb-1">
                   Loja para Atendimento
                 </label>
                 <select
                   value={selectedStore}
                   onChange={(e) => setSelectedStore(e.target.value as "matriz" | "filial")}
-                  className="w-full px-3 py-2 text-sm bg-surface border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red text-deep-earth"
+                  className="w-full px-3 py-2 text-sm bg-white border border-brand-dark-300 rounded-lg focus:outline-none focus:border-brand-green-700 text-brand-dark-900"
                 >
                   <option value="matriz">Loja Matriz (Cidade Velha)</option>
                   <option value="filial">Loja Filial (Shopping Pátio Belém)</option>
@@ -196,7 +196,7 @@ export default function CartModal() {
               </div>
 
               <div>
-                <label className="block text-xs font-label-sm text-deep-earth uppercase tracking-wider mb-1">
+                <label className="block text-xs font-label-sm text-brand-dark-700 uppercase tracking-wider mb-1">
                   Observações / Endereço (opcional)
                 </label>
                 <input
@@ -204,15 +204,15 @@ export default function CartModal() {
                   value={deliveryNotes}
                   onChange={(e) => setDeliveryNotes(e.target.value)}
                   placeholder="Ex: Entrega na Cidade Velha / Retirada em loja"
-                  className="w-full px-3 py-2 text-sm bg-surface border border-golden-honey/40 rounded focus:outline-none focus:border-heritage-red text-deep-earth"
+                  className="w-full px-3 py-2 text-sm bg-white border border-brand-dark-300 rounded-lg focus:outline-none focus:border-brand-green-700 text-brand-dark-900"
                 />
               </div>
             </div>
 
             {/* Subtotal */}
-            <div className="pt-2 border-t border-golden-honey/20 flex justify-between items-center">
-              <span className="font-label-lg uppercase tracking-wider text-deep-earth">Total:</span>
-              <span className="font-display-lg text-2xl text-heritage-red font-bold">
+            <div className="pt-2 border-t border-brand-dark-200 flex justify-between items-center">
+              <span className="font-label-lg uppercase tracking-wider text-brand-dark-700">Total:</span>
+              <span className="font-display-lg text-2xl text-brand-green-900 font-bold">
                 {new Intl.NumberFormat("pt-BR", {
                   style: "currency",
                   currency: "BRL",
@@ -223,7 +223,7 @@ export default function CartModal() {
             {/* Action Buttons */}
             <button
               onClick={handleCheckoutWhatsApp}
-              className="w-full bg-[#25D366] hover:bg-[#1ebe57] text-white font-label-lg uppercase tracking-widest py-3.5 rounded shadow-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-brand-green-900 hover:bg-brand-green-800 text-white font-label-lg uppercase tracking-widest py-3.5 rounded-lg shadow-lg transition-colors flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-xl">chat</span>
               Finalizar Pedido via WhatsApp
