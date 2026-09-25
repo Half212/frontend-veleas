@@ -1,4 +1,5 @@
 import ProductCarousel from '@/components/productCarousel';
+import HomeCollections from '@/components/HomeCollections';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -10,74 +11,8 @@ export default function Home() {
         <ProductCarousel />
       </section>
 
-      {/* Categories Bento Grid */}
-      <section className="px-margin-mobile md:px-margin-desktop max-w-max-width mx-auto mb-24 md:mb-32">
-        <div className="text-center mb-14">
-          <span className="text-xs md:text-sm font-label-lg uppercase tracking-widest text-brand-green-700 font-bold mb-2 block">
-            Artesanato & Fé
-          </span>
-          <h2 className="font-headline-md text-[32px] md:text-[40px] text-brand-dark-950 mb-3">Nossas Coleções</h2>
-          <div className="w-20 h-1 bg-brand-green-800 rounded-full mx-auto"></div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-8 gap-6 md:gap-8">
-          {/* Religiosas (Large) */}
-          <Link href="/loja" className="group md:col-span-4 relative h-[380px] md:h-[420px] rounded-2xl overflow-hidden border border-brand-dark-200/80 shadow-sm hover:shadow-xl transition-all duration-500 block">
-            <Image fill src="/images/velareligiosa.png" alt="Velas Religiosas" className="object-cover transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-brand-dark-950/90 via-brand-dark-950/30 to-transparent"></div>
-            <div className="absolute bottom-0 left-0 p-8 w-full">
-              <span className="inline-block text-[11px] font-label-sm uppercase tracking-widest text-white bg-brand-green-900/90 px-3 py-1 rounded mb-3 backdrop-blur-sm">Tradição & Fé</span>
-              <h3 className="font-headline-sm text-[26px] text-white mb-2">Velas Religiosas</h3>
-              <p className="font-body-md text-white/85 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">Fé e devoção moldadas à mão para os seus momentos sagrados.</p>
-              <span className="inline-flex items-center font-label-sm text-white uppercase tracking-widest border-b border-white/60 pb-1 group-hover:border-white transition-colors">
-                Ver coleção <span className="material-symbols-outlined ml-2 text-[16px]">arrow_forward</span>
-              </span>
-            </div>
-          </Link>
-
-          {/* Decorativas (Small) */}
-          <Link href="/loja" className="group md:col-span-4 relative h-[380px] md:h-[420px] rounded-2xl overflow-hidden border border-brand-dark-200/80 shadow-sm hover:shadow-xl transition-all duration-500 block">
-            <Image fill src="/images/veladecorativa2.png" alt="Velas Decorativas" className="object-cover transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-brand-dark-950/90 via-brand-dark-950/30 to-transparent"></div>
-            <div className="absolute bottom-0 left-0 p-8 w-full">
-              <span className="inline-block text-[11px] font-label-sm uppercase tracking-widest text-white bg-brand-green-900/90 px-3 py-1 rounded mb-3 backdrop-blur-sm">Sofisticação</span>
-              <h3 className="font-headline-sm text-[26px] text-white mb-2">Velas Decorativas</h3>
-              <p className="font-body-md text-white/85 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">Ambientes mais acolhedores, elegantes e iluminados.</p>
-              <span className="inline-flex items-center font-label-sm text-white uppercase tracking-widest border-b border-white/60 pb-1 group-hover:border-white transition-colors">
-                Ver coleção <span className="material-symbols-outlined ml-2 text-[16px]">arrow_forward</span>
-              </span>
-            </div>
-          </Link>
-
-          {/* Aromáticas (Small) */}
-          <Link href="/loja" className="group md:col-span-4 relative h-[380px] md:h-[420px] rounded-2xl overflow-hidden border border-brand-dark-200/80 shadow-sm hover:shadow-xl transition-all duration-500 block">
-            <Image fill src="/images/velaaromatica.jpeg" alt="Velas Aromáticas" className="object-cover transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-brand-dark-950/90 via-brand-dark-950/30 to-transparent"></div>
-            <div className="absolute bottom-0 left-0 p-8 w-full">
-              <span className="inline-block text-[11px] font-label-sm uppercase tracking-widest text-white bg-brand-green-900/90 px-3 py-1 rounded mb-3 backdrop-blur-sm">Sensações</span>
-              <h3 className="font-headline-sm text-[26px] text-white mb-2">Velas Aromáticas</h3>
-              <p className="font-body-md text-white/85 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">Aromas envolventes que transformam sua casa e bem-estar.</p>
-              <span className="inline-flex items-center font-label-sm text-white uppercase tracking-widest border-b border-white/60 pb-1 group-hover:border-white transition-colors">
-                Ver coleção <span className="material-symbols-outlined ml-2 text-[16px]">arrow_forward</span>
-              </span>
-            </div>
-          </Link>
-
-          {/* Sebo de Holanda (Large) */}
-          <Link href="/loja" className="group md:col-span-4 relative h-[380px] md:h-[420px] rounded-2xl overflow-hidden border border-brand-dark-200/80 shadow-sm hover:shadow-xl transition-all duration-500 block">
-            <Image fill src="/images/sebodeholanda.jpeg" alt="Sebo de Holanda" className="object-cover transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-brand-dark-950/90 via-brand-dark-950/30 to-transparent"></div>
-            <div className="absolute bottom-0 left-0 p-8 w-full">
-              <span className="inline-block text-[11px] font-label-sm uppercase tracking-widest text-white bg-brand-green-900/90 px-3 py-1 rounded mb-3 backdrop-blur-sm">Artesanal</span>
-              <h3 className="font-headline-sm text-[26px] text-white mb-2">Sebo de Holanda</h3>
-              <p className="font-body-md text-white/85 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">Tradição centenária e pureza para seu cuidado diário.</p>
-              <span className="inline-flex items-center font-label-sm text-white uppercase tracking-widest border-b border-white/60 pb-1 group-hover:border-white transition-colors">
-                Ver coleção <span className="material-symbols-outlined ml-2 text-[16px]">arrow_forward</span>
-              </span>
-            </div>
-          </Link>
-        </div>
-      </section>
+      {/* Categories Bento Grid (Nossas Coleções gerenciáveis pelo Admin) */}
+      <HomeCollections />
 
       {/* History/About Section */}
       <section className="bg-brand-green-50/60 py-24 md:py-32 border-y border-brand-dark-200">

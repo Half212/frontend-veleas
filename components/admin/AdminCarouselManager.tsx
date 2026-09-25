@@ -35,8 +35,9 @@ export default function AdminCarouselManager() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsClient(true);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadSlides();
+    carouselService.fetchFromBackend().then(() => {
+      loadSlides();
+    });
   }, [loadSlides]);
 
   const compressAndOptimizeImage = (file: File): Promise<string> => {

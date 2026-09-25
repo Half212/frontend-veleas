@@ -20,8 +20,8 @@ export default function ProductCarousel() {
   });
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSlides(carouselService.getActiveSlides());
+    // Sincroniza dados com backend
+    carouselService.fetchFromBackend();
 
     const unsubscribe = carouselService.onUpdate((updatedSlides) => {
       setSlides(updatedSlides.filter((s) => s.active));
@@ -66,7 +66,7 @@ export default function ProductCarousel() {
 
               <div className="relative z-10 text-center px-6 max-w-4xl">
                 <span className="inline-block text-xs md:text-sm font-label-sm uppercase tracking-[0.3em] text-accent-gold font-bold mb-4 bg-brand-dark-900/60 px-4 py-1.5 rounded-full border border-accent-gold/30 backdrop-blur-sm shadow-sm">
-                  Tradição & Pureza Artesanal
+                  Tradição que Ilumina Gerações
                 </span>
                 
                 <h1 className="font-display-lg text-[32px] sm:text-[44px] md:text-[56px] text-white mb-4 leading-tight drop-shadow-lg font-bold tracking-tight">

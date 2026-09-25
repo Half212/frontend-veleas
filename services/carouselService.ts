@@ -93,15 +93,21 @@ export const carouselService = {
   async saveSlides(slides: CarouselSlide[]): Promise<void> {
     this.saveSlidesLocally(slides);
 
-    // Tenta sincronizar com o backend caso a rota exista
+    // Sincroniza com o backend PostgreSQL
     try {
-      await fetch(`${API_BASE_URL}/carousel`, {
+      const res = await fetch(`${API_BASE_URL}/carousel`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(slides),
       });
-    } catch {
-      // Falha silenciosa no backend, mantendo persistência no localStorage
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          this.saveSlidesLocally(data);
+        }
+      }
+    } catch (e) {
+      console.warn("Falha na sincronização do carrossel com backend:", e);
     }
   },
 

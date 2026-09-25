@@ -16,7 +16,7 @@ export default function HistoriaPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-brand-dark-950/95 via-brand-dark-950/40 to-transparent"></div>
           <div className="absolute bottom-0 left-0 p-8 md:p-14 w-full">
             <span className="text-sm md:text-base font-bold text-accent-gold uppercase tracking-[0.25em] mb-3 block drop-shadow-md">
-              Tradição & Devoção Centenária
+              Tradição que Ilumina Gerações
             </span>
             <h1 className="font-display-xl text-[40px] md:text-[64px] text-white mb-3 drop-shadow-md">
               Nossa História

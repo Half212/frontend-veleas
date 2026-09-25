@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, FormEvent, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import AdminCarouselManager from "@/components/admin/AdminCarouselManager";
+import AdminCollectionsManager from "@/components/admin/AdminCollectionsManager";
 import AdminReportsDashboard from "@/components/admin/AdminReportsDashboard";
 
 interface Category {
@@ -21,16 +21,51 @@ interface Product {
   description?: string;
 }
 
-type AdminTab = "products" | "carousel" | "reports";
+type AdminTab = "products" | "carousel" | "collections" | "reports";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
 export default function PainelAdministrativo() {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<AdminTab>("products");
-  const [isClient, setIsClient] = useState(false);
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
-  const [userRole, setUserRole] = useState<string>("");
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const userRole = useSyncExternalStore(
+    (callback) => {
+      window.addEventListener("storage", callback);
+      return () => window.removeEventListener("storage", callback);
+    },
+    () => (typeof window !== "undefined" ? localStorage.getItem("userRole") || "" : ""),
+    () => ""
+  );
+
+  const isAuthorized = useSyncExternalStore(
+    (callback) => {
+      window.addEventListener("storage", callback);
+      return () => window.removeEventListener("storage", callback);
+    },
+    () => {
+      if (typeof window === "undefined") return null;
+      const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+      const role = localStorage.getItem("userRole") || "";
+      return (
+        isLoggedIn &&
+        (role === "ROLE_ADMIN" ||
+          role === "ROLE_SUPERVISOR" ||
+          role === "ADMIN" ||
+          role === "SUPERVISOR")
+      );
+    },
+    () => null
+  );
+
+  const isSupervisor =
+    userRole === "ROLE_SUPERVISOR" ||
+    userRole === "SUPERVISOR" ||
+    userRole === "ROLE_ADMIN" ||
+    userRole === "ADMIN";
 
   // Dados do backend
   const [categories, setCategories] = useState<Category[]>([]);
@@ -60,29 +95,15 @@ export default function PainelAdministrativo() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isOptimizingImage, setIsOptimizingImage] = useState(false);
 
-  // Verificação de permissões e carregamento de dados
+  // Carregamento de dados após autorização confirmada
   useEffect(() => {
-    setIsClient(true);
-    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-    const role = localStorage.getItem("userRole") || "";
-    setUserRole(role);
-
-    const allowed =
-      isLoggedIn &&
-      (role === "ROLE_ADMIN" ||
-        role === "ROLE_SUPERVISOR" ||
-        role === "ADMIN" ||
-        role === "SUPERVISOR");
-
-    setIsAuthorized(allowed);
-
-    if (allowed) {
+    if (isAuthorized) {
       loadCategories();
       loadProducts();
     }
-  }, []);
+  }, [isAuthorized]);
 
-  const loadCategories = async () => {
+  async function loadCategories() {
     setIsLoadingCategories(true);
     try {
       const res = await fetch(`${API_URL}/categories`);
@@ -94,9 +115,9 @@ export default function PainelAdministrativo() {
     } finally {
       setIsLoadingCategories(false);
     }
-  };
+  }
 
-  const loadProducts = async () => {
+  async function loadProducts() {
     try {
       const res = await fetch(`${API_URL}/products`);
       if (res.ok) {
@@ -106,7 +127,7 @@ export default function PainelAdministrativo() {
     } catch (err) {
       console.error("Erro ao carregar produtos:", err);
     }
-  };
+  }
 
   const compressAndOptimizeImage = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -382,6 +403,22 @@ export default function PainelAdministrativo() {
             <span>🖼️ Banners & Carrossel</span>
           </button>
 
+          {/* Aba de Coleções liberada para Supervisor */}
+          {isSupervisor && (
+            <button
+              onClick={() => setActiveTab("collections")}
+              className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-label-sm text-xs md:text-sm uppercase tracking-wider font-bold transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === "collections"
+                  ? "bg-brand-green-900 text-white shadow-md"
+                  : "bg-white text-brand-dark-700 hover:bg-brand-dark-100 border border-brand-dark-200"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">grid_view</span>
+              <span>✨ Nossas Coleções</span>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold">SUPERVISOR</span>
+            </button>
+          )}
+
           <button
             onClick={() => setActiveTab("reports")}
             className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-label-sm text-xs md:text-sm uppercase tracking-wider font-bold transition-all whitespace-nowrap cursor-pointer ${
@@ -646,6 +683,15 @@ export default function PainelAdministrativo() {
         {activeTab === "carousel" && (
           <div className="animate-fadeIn">
             <AdminCarouselManager />
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* ABA 3: NOSSAS COLEÇÕES (SUPERVISOR) */}
+        {/* ======================================================== */}
+        {activeTab === "collections" && (
+          <div className="animate-fadeIn">
+            <AdminCollectionsManager isSupervisor={isSupervisor} />
           </div>
         )}
 
