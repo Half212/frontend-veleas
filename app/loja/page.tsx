@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import { API_URL } from "@/services/apiConfig";
 
 interface Category {
   id: number;
@@ -20,8 +21,6 @@ interface Product {
   categoryName: string;
   image?: string;
 }
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
 export default function Loja() {
   const router = useRouter();

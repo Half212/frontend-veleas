@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+import { API_URL } from "@/services/apiConfig";
 
 export default function Login() {
   const router = useRouter();

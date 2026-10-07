@@ -22,7 +22,7 @@
       "created": 1700000000000,
       "name": "Base Environment",
       "data": {
-        "base_url": "http://localhost:8080/api"
+        "base_url": "https://backend-velas.onrender.com/api"
       },
       "dataPropertyOrder": {
         "&": [

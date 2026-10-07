@@ -1,4 +1,5 @@
 import { CarouselSlide } from "@/types/carousel";
+import { API_BASE_URL } from "@/services/apiConfig";
 
 const CAROUSEL_STORAGE_KEY = "velas_sao_joao_carousel_slides_v1";
 const CAROUSEL_EVENT = "velas_sao_joao_carousel_updated";
@@ -36,7 +37,7 @@ export const DEFAULT_CAROUSEL_SLIDES: CarouselSlide[] = [
   },
 ];
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+
 
 export const carouselService = {
   async fetchFromBackend(): Promise<CarouselSlide[] | null> {

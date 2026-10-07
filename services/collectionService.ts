@@ -1,4 +1,5 @@
 import { HomeCollectionItem, CollectionsSectionHeader } from "@/types/collection";
+import { API_BASE_URL } from "@/services/apiConfig";
 
 const COLLECTIONS_STORAGE_KEY = "velas_sao_joao_home_collections_v1";
 const HEADER_STORAGE_KEY = "velas_sao_joao_home_collections_header_v1";
@@ -58,7 +59,7 @@ export const DEFAULT_SECTION_HEADER: CollectionsSectionHeader = {
 
 const SERVER_ACTIVE_COLLECTIONS: HomeCollectionItem[] = DEFAULT_COLLECTIONS.filter((item) => item.active);
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+
 
 // Caches estáveis em memória para evitar loops em useSyncExternalStore
 let cachedCollections: HomeCollectionItem[] | null = null;

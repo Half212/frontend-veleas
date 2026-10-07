@@ -6,6 +6,7 @@ import Link from "next/link";
 import AdminCarouselManager from "@/components/admin/AdminCarouselManager";
 import AdminCollectionsManager from "@/components/admin/AdminCollectionsManager";
 import AdminReportsDashboard from "@/components/admin/AdminReportsDashboard";
+import { API_URL } from "@/services/apiConfig";
 
 interface Category {
   id: number;
@@ -22,8 +23,6 @@ interface Product {
 }
 
 type AdminTab = "products" | "carousel" | "collections" | "reports";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
 
 export default function PainelAdministrativo() {
   const [activeTab, setActiveTab] = useState<AdminTab>("products");

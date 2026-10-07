@@ -33,7 +33,7 @@ export default function CartModal() {
   const handleCheckoutWhatsApp = () => {
     if (cart.length === 0) return;
 
-    const phoneStore = selectedStore === "matriz" ? "5591980726020" : "5591980726020";
+    const phoneStore = selectedStore === "matriz" ? "559120023191" : "5591980726020";
     const storeName = selectedStore === "matriz" ? "Loja Matriz (Cidade Velha)" : "Loja Filial (Shopping Pátio Belém)";
 
     const formattedItems = cart
