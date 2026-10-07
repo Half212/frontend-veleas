@@ -33,7 +33,7 @@ export default function CartModal() {
   const handleCheckoutWhatsApp = () => {
     if (cart.length === 0) return;
 
-    const phoneStore = selectedStore === "matriz" ? "559120023191" : "5591980726020";
+    const phoneStore = selectedStore === "matriz" ? "5591920023191" : "5591980726020";
     const storeName = selectedStore === "matriz" ? "Loja Matriz (Cidade Velha)" : "Loja Filial (Shopping Pátio Belém)";
 
     const formattedItems = cart
@@ -46,15 +46,23 @@ export default function CartModal() {
       )
       .join("\n\n");
 
-    const message = `🕯️ *NOVO PEDIDO - VELAS SÃO JOÃO* 🕯️\n\n` +
-      `📍 *Unidade de Atendimento*: ${storeName}\n` +
-      `👤 *Cliente*: ${customerName.trim() || "Não informado"}\n` +
-      (customerPhone.trim() ? `📞 *Telefone*: ${customerPhone.trim()}\n` : "") +
-      (deliveryNotes.trim() ? `📝 *Observações/Endereço*: ${deliveryNotes.trim()}\n` : "") +
+    const candle = "\u{1F56F}\u{FE0F}";
+    const pin = "\u{1F4CD}";
+    const user = "\u{1F464}";
+    const phone = "\u{1F4DE}";
+    const memo = "\u{1F4DD}";
+    const packageIcon = "\u{1F4E6}";
+    const money = "\u{1F4B0}";
+
+    const message = `${candle} *NOVO PEDIDO - VELAS SÃO JOÃO* ${candle}\n\n` +
+      `${pin} *Unidade de Atendimento*: ${storeName}\n` +
+      `${user} *Cliente*: ${customerName.trim() || "Não informado"}\n` +
+      (customerPhone.trim() ? `${phone} *Telefone*: ${customerPhone.trim()}\n` : "") +
+      (deliveryNotes.trim() ? `${memo} *Observações/Endereço*: ${deliveryNotes.trim()}\n` : "") +
       `----------------------------------------\n` +
-      `📦 *ITENS DO PEDIDO*:\n\n${formattedItems}\n` +
+      `${packageIcon} *ITENS DO PEDIDO*:\n\n${formattedItems}\n` +
       `----------------------------------------\n` +
-      `💰 *VALOR TOTAL*: *${new Intl.NumberFormat("pt-BR", {
+      `${money} *VALOR TOTAL*: *${new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: "BRL",
       }).format(totalPrice)}*\n\n` +
