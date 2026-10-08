@@ -3,8 +3,10 @@
 import { useCart } from "@/context/CartContext";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function CartModal() {
+  const router = useRouter();
   const {
     cart,
     removeFromCart,
@@ -20,11 +22,15 @@ export default function CartModal() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [deliveryNotes, setDeliveryNotes] = useState("");
   const [selectedStore, setSelectedStore] = useState<"matriz" | "filial">("matriz");
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
-    const savedName = localStorage.getItem("userName");
-    if (savedName) {
-      setCustomerName(savedName);
+    if (isCartOpen) {
+      setShowLoginModal(false);
+      const savedName = localStorage.getItem("userName");
+      if (savedName) {
+        setCustomerName(savedName);
+      }
     }
   }, [isCartOpen]);
 
@@ -32,6 +38,12 @@ export default function CartModal() {
 
   const handleCheckoutWhatsApp = () => {
     if (cart.length === 0) return;
+
+    const isLoggedIn = typeof window !== "undefined" && localStorage.getItem("isLoggedIn") === "true";
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
 
     const phoneStore = selectedStore === "matriz" ? "5591920023191" : "5591980726020";
     const storeName = selectedStore === "matriz" ? "Loja Matriz (Cidade Velha)" : "Loja Filial (Shopping Pátio Belém)";
@@ -239,6 +251,42 @@ export default function CartModal() {
           </div>
         )}
       </div>
+
+      {/* Modal de aviso para login no checkout */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-[60] bg-brand-dark-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-brand-dark-200 w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center space-y-4 animate-fadeIn">
+            <div className="w-14 h-14 bg-brand-green-100 text-brand-green-900 rounded-full flex items-center justify-center mx-auto">
+              <span className="material-symbols-outlined text-[30px]">lock</span>
+            </div>
+            <h3 className="font-display-lg text-xl text-brand-dark-950 font-bold">
+              Identificação Necessária
+            </h3>
+            <p className="font-body-md text-sm text-brand-dark-600 leading-relaxed">
+              Para finalizar seu pedido pelo WhatsApp, por favor faça login ou crie sua conta. Seus produtos continuarão guardados no carrinho!
+            </p>
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                onClick={() => {
+                  setShowLoginModal(false);
+                  setIsCartOpen(false);
+                  router.push("/login");
+                }}
+                className="w-full bg-brand-green-900 hover:bg-brand-green-800 text-white font-label-sm uppercase tracking-widest py-3 rounded-xl transition-colors font-bold text-xs shadow cursor-pointer"
+              >
+                Entrar / Criar Conta
+              </button>
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="w-full text-brand-dark-600 hover:text-brand-dark-900 font-label-sm uppercase tracking-wider py-2 transition-colors text-xs font-semibold cursor-pointer"
+              >
+                Voltar ao Carrinho
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

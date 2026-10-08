@@ -27,6 +27,7 @@ export default function Loja() {
   const { addToCart, totalItems, setIsCartOpen } = useCart();
   const [userName, setUserName] = useState("");
   const [userRole, setUserRole] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -62,16 +63,18 @@ export default function Loja() {
 
   useEffect(() => {
     setIsClient(true);
-    const isLoggedIn = localStorage.getItem("isLoggedIn");
-    if (isLoggedIn !== "true") {
-      router.push("/login");
-    } else {
+    const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+    setIsLoggedIn(loggedIn);
+    if (loggedIn) {
       setUserName(localStorage.getItem("userName") || "Visitante");
       setUserRole(localStorage.getItem("userRole") || "");
-      loadProducts();
-      loadCategories();
+    } else {
+      setUserName("");
+      setUserRole("");
     }
-  }, [router]);
+    loadProducts();
+    loadCategories();
+  }, []);
 
   const loadProducts = async () => {
     setIsLoading(true);
@@ -310,11 +313,17 @@ export default function Loja() {
             </div>
             <h1 className="font-display-lg text-3xl md:text-4xl text-brand-dark-950 font-bold mb-2">Loja São João</h1>
             <p className="font-body-md text-brand-dark-600 text-base">
-              Bem-vindo(a), <span className="font-semibold text-brand-dark-900">{userName}</span>!{" "}
-              {isStaff && (
-                <span className="inline-block ml-2 px-2.5 py-0.5 rounded text-xs font-label-sm uppercase tracking-wider bg-brand-green-100 text-brand-green-900 border border-brand-green-300 font-bold">
-                  {userRole.replace("ROLE_", "")}
-                </span>
+              {isLoggedIn ? (
+                <>
+                  Bem-vindo(a), <span className="font-semibold text-brand-dark-900">{userName}</span>!{" "}
+                  {isStaff && (
+                    <span className="inline-block ml-2 px-2.5 py-0.5 rounded text-xs font-label-sm uppercase tracking-wider bg-brand-green-100 text-brand-green-900 border border-brand-green-300 font-bold">
+                      {userRole.replace("ROLE_", "")}
+                    </span>
+                  )}
+                </>
+              ) : (
+                "Explore nosso catálogo de velas artesanais de alta qualidade."
               )}
             </p>
           </div>
@@ -338,18 +347,30 @@ export default function Loja() {
               Carrinho ({totalItems})
             </button>
 
-            <button
-              onClick={() => {
-                localStorage.removeItem("isLoggedIn");
-                localStorage.removeItem("userName");
-                localStorage.removeItem("userRole");
-                router.push("/");
-              }}
-              className="text-brand-dark-500 hover:text-red-700 border border-brand-dark-200 hover:border-red-200 font-label-sm uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer text-xs font-bold"
-            >
-              <span className="material-symbols-outlined text-[18px]">logout</span>
-              Sair
-            </button>
+            {isLoggedIn ? (
+              <button
+                onClick={() => {
+                  localStorage.removeItem("isLoggedIn");
+                  localStorage.removeItem("userName");
+                  localStorage.removeItem("userRole");
+                  setIsLoggedIn(false);
+                  setUserName("");
+                  setUserRole("");
+                }}
+                className="text-brand-dark-500 hover:text-red-700 border border-brand-dark-200 hover:border-red-200 font-label-sm uppercase tracking-widest transition-colors flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer text-xs font-bold"
+              >
+                <span className="material-symbols-outlined text-[18px]">logout</span>
+                Sair
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="bg-brand-green-900 hover:bg-brand-green-800 text-white font-label-sm uppercase tracking-widest transition-all flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-sm text-xs font-bold"
+              >
+                <span className="material-symbols-outlined text-[18px]">account_circle</span>
+                Entrar / Cadastrar
+              </Link>
+            )}
           </div>
         </header>
 
