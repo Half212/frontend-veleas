@@ -170,11 +170,6 @@ export default function DetalhesProdutoPage() {
     currency: "BRL",
   }).format(product.price);
 
-  const installmentPrice = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(product.price / 3);
-
   return (
     <main className="min-h-screen pt-28 pb-24 px-margin-mobile md:px-margin-desktop bg-brand-dark-50/60">
       <div className="max-w-max-width mx-auto">
@@ -245,15 +240,6 @@ export default function DetalhesProdutoPage() {
           {/* Coluna 2: Informações de Venda & Valor Evidente */}
           <div className="lg:col-span-6 flex flex-col justify-between space-y-6">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="inline-block px-3 py-1 bg-brand-green-100 text-brand-green-900 text-xs font-label-sm uppercase tracking-wider rounded-lg font-bold border border-brand-green-300">
-                  ✨ 100% Cera Artesanal
-                </span>
-                <span className="inline-block px-3 py-1 bg-amber-50 text-amber-900 text-xs font-label-sm uppercase tracking-wider rounded-lg font-bold border border-amber-200">
-                  {product.stockQuantity > 0 ? "Em Estoque" : "Sob Encomenda"}
-                </span>
-              </div>
-
               <h1 className="font-display-lg text-3xl md:text-4xl text-brand-dark-950 font-bold mb-4 leading-tight">
                 {product.name}
               </h1>
@@ -266,11 +252,7 @@ export default function DetalhesProdutoPage() {
                     {formattedPrice}
                   </span>
                 </div>
-                <p className="font-body-md text-xs text-brand-dark-700 mt-2 flex items-center gap-1.5 font-medium">
-                  <span className="material-symbols-outlined text-[16px] text-brand-green-700">credit_card</span>
-                  Ou até <strong>3x de {installmentPrice}</strong> sem juros no cartão
-                </p>
-                <p className="font-body-md text-xs text-brand-green-800 mt-1 flex items-center gap-1.5 font-semibold">
+                <p className="font-body-md text-xs text-brand-green-800 mt-2 flex items-center gap-1.5 font-semibold">
                   <span className="material-symbols-outlined text-[16px]">local_shipping</span>
                   Pronta entrega para Belém e região metropolitana
                 </p>

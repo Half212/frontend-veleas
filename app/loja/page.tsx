@@ -434,18 +434,21 @@ export default function Loja() {
                   </div>
                 )}
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-auto border-t border-brand-dark-200 pt-4">
-                  <span className="font-label-lg text-2xl text-brand-green-900 font-bold">
-                    {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(produto.price)}
-                  </span>
-                  <div className="flex items-center gap-2">
+                <div className="mt-auto border-t border-brand-dark-200 pt-4 space-y-3">
+                  <div className="flex items-baseline justify-between">
+                    <span className="font-label-sm text-[11px] text-brand-dark-500 uppercase tracking-wider font-semibold">Preço</span>
+                    <span className="font-label-lg text-2xl text-brand-green-900 font-bold">
+                      {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(produto.price)}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 w-full">
                     <Link
                       href={`/loja/${produto.id}`}
-                      className="bg-brand-dark-50 border border-brand-dark-300 hover:bg-brand-green-50 text-brand-dark-900 font-label-sm uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      className="w-full bg-brand-dark-50 border border-brand-dark-300 hover:bg-brand-green-50 text-brand-dark-900 font-label-sm uppercase tracking-wider py-2.5 px-2 rounded-xl transition-all text-xs font-bold flex items-center justify-center gap-1 cursor-pointer text-center truncate shadow-xs"
                       title="Ver detalhes do produto"
                     >
                       <span className="material-symbols-outlined text-[16px]">visibility</span>
-                      Detalhes
+                      <span>Detalhes</span>
                     </Link>
                     <button
                       onClick={(e) => {
@@ -457,10 +460,10 @@ export default function Loja() {
                           price: produto.price,
                         });
                       }}
-                      className="bg-brand-green-900 text-white hover:bg-brand-green-800 hover:shadow-md px-4 py-2.5 rounded-xl transition-all duration-300 font-label-sm uppercase tracking-wider flex items-center gap-1.5 cursor-pointer text-xs font-bold"
+                      className="w-full bg-brand-green-900 text-white hover:bg-brand-green-800 hover:shadow-md py-2.5 px-2 rounded-xl transition-all duration-300 font-label-sm uppercase tracking-wider flex items-center justify-center gap-1 cursor-pointer text-xs font-bold text-center truncate shadow-xs"
                     >
-                      <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-                      Comprar
+                      <span className="material-symbols-outlined text-[16px]">add_shopping_cart</span>
+                      <span>Comprar</span>
                     </button>
                   </div>
                 </div>
