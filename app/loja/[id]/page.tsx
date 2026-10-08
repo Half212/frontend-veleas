@@ -20,7 +20,8 @@ interface Product {
 export default function DetalhesProdutoPage() {
   const params = useParams();
   const router = useRouter();
-  const productId = params?.id ? String(params.id) : "";
+  const rawId = params?.id;
+  const productId = Array.isArray(rawId) ? rawId[0] : rawId ? String(rawId) : "";
   const { addToCart, setIsCartOpen } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -40,39 +41,71 @@ export default function DetalhesProdutoPage() {
   useEffect(() => {
     if (!productId) return;
 
+    let isMounted = true;
+
     const fetchProductDetails = async () => {
       setIsLoading(true);
       setError("");
       try {
-        // Tenta buscar o produto direto por ID ou pela lista completa
-        const res = await fetch(`${API_URL}/products`);
-        if (!res.ok) {
+        // 1. Tenta buscar o produto especificamente pelo ID: GET /products/:id
+        const resSingle = await fetch(`${API_URL}/products/${productId}`);
+        if (resSingle.ok) {
+          const singleProduct: Product = await resSingle.json();
+          if (isMounted && singleProduct && singleProduct.id) {
+            setProduct(singleProduct);
+
+            // Carrega os produtos relacionados em segundo plano
+            fetch(`${API_URL}/products`)
+              .then((r) => (r.ok ? r.json() : []))
+              .then((all: Product[]) => {
+                if (isMounted && Array.isArray(all)) {
+                  setRelatedProducts(all.filter((p) => String(p.id) !== productId).slice(0, 3));
+                }
+              })
+              .catch(() => {});
+
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // 2. Fallback: Se o endpoint por ID falhar, busca a lista completa /products
+        const resAll = await fetch(`${API_URL}/products`);
+        if (!resAll.ok) {
           throw new Error("Não foi possível carregar os dados dos produtos.");
         }
-        const allProducts: Product[] = await res.json();
+        const allProducts: Product[] = await resAll.json();
         const found = allProducts.find((p) => String(p.id) === productId);
 
-        if (found) {
-          setProduct(found);
-          // Filtrar produtos relacionados da mesma categoria ou aleatórios
-          const related = allProducts.filter((p) => p.id !== found.id).slice(0, 3);
-          setRelatedProducts(related);
-        } else {
-          setError("Produto não encontrado no catálogo.");
+        if (isMounted) {
+          if (found) {
+            setProduct(found);
+            setRelatedProducts(allProducts.filter((p) => String(p.id) !== productId).slice(0, 3));
+          } else {
+            setError("Produto não encontrado no catálogo.");
+          }
         }
       } catch (err: unknown) {
         console.error("Erro ao carregar detalhes do produto:", err);
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("Erro inesperado ao buscar detalhes.");
+        if (isMounted) {
+          if (err instanceof Error) {
+            setError(err.message);
+          } else {
+            setError("Erro inesperado ao buscar detalhes.");
+          }
         }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchProductDetails();
+
+    return () => {
+      isMounted = false;
+    };
   }, [productId]);
 
   if (isLoading) {
