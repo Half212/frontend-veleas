@@ -381,28 +381,32 @@ export default function Loja() {
               key={produto.id}
               className="bg-white border border-brand-dark-200 p-5 rounded-2xl hover:shadow-xl transition-all duration-300 group flex flex-col h-full transform hover:-translate-y-1 relative"
             >
-              {/* Imagem do Produto */}
-              <div className="aspect-square bg-brand-dark-50 mb-5 rounded-xl flex items-center justify-center overflow-hidden relative shadow-inner">
-                <Image
-                  src={produto.image || "/images/velaartesanal.jpeg"}
-                  alt={produto.name}
-                  fill
-                  unoptimized={Boolean(produto.image && produto.image.startsWith("data:"))}
-                  className="object-cover opacity-95 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
-                />
-                <div className="absolute inset-0 bg-brand-green-950/0 group-hover:bg-brand-green-950/5 transition-colors z-10" />
+              {/* Imagem do Produto com link para detalhes */}
+              <Link href={`/loja/${produto.id}`} className="block relative">
+                <div className="aspect-square bg-brand-dark-50 mb-5 rounded-xl flex items-center justify-center overflow-hidden relative shadow-inner">
+                  <Image
+                    src={produto.image || "/images/velaartesanal.jpeg"}
+                    alt={produto.name}
+                    fill
+                    unoptimized={Boolean(produto.image && produto.image.startsWith("data:"))}
+                    className="object-cover opacity-95 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+                  />
+                  <div className="absolute inset-0 bg-brand-green-950/0 group-hover:bg-brand-green-950/5 transition-colors z-10" />
 
-                {/* Badge de Categoria */}
-                <div className="absolute top-3 left-3 z-20 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm text-brand-green-900 font-label-sm text-[10px] uppercase tracking-wider border border-brand-green-200 font-bold">
-                  {produto.categoryName}
+                  {/* Badge de Categoria */}
+                  <div className="absolute top-3 left-3 z-20 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm text-brand-green-900 font-label-sm text-[10px] uppercase tracking-wider border border-brand-green-200 font-bold">
+                    {produto.categoryName}
+                  </div>
                 </div>
-              </div>
+              </Link>
 
               {/* Informações */}
               <div className="flex-grow flex flex-col">
-                <h2 className="font-display-lg text-2xl text-brand-dark-950 mb-2 group-hover:text-brand-green-800 transition-colors font-bold">
-                  {produto.name}
-                </h2>
+                <Link href={`/loja/${produto.id}`}>
+                  <h2 className="font-display-lg text-2xl text-brand-dark-950 mb-2 group-hover:text-brand-green-800 transition-colors font-bold cursor-pointer">
+                    {produto.name}
+                  </h2>
+                </Link>
                 <p className="font-body-md text-brand-dark-600 mb-6 flex-grow leading-relaxed text-sm">
                   {produto.description}
                 </p>
@@ -430,24 +434,35 @@ export default function Loja() {
                   </div>
                 )}
 
-                <div className="flex justify-between items-center mt-auto border-t border-brand-dark-200 pt-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-auto border-t border-brand-dark-200 pt-4">
                   <span className="font-label-lg text-2xl text-brand-green-900 font-bold">
                     {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(produto.price)}
                   </span>
-                  <button
-                    onClick={() =>
-                      addToCart({
-                        id: produto.id,
-                        name: produto.name,
-                        description: produto.description,
-                        price: produto.price,
-                      })
-                    }
-                    className="bg-brand-green-900 text-white hover:bg-brand-green-800 hover:shadow-md px-5 py-2.5 rounded-xl transition-all duration-300 font-label-sm uppercase tracking-wider flex items-center gap-2 cursor-pointer text-xs font-bold"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-                    Comprar
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/loja/${produto.id}`}
+                      className="bg-brand-dark-50 border border-brand-dark-300 hover:bg-brand-green-50 text-brand-dark-900 font-label-sm uppercase tracking-wider px-3.5 py-2.5 rounded-xl transition-all text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      title="Ver detalhes do produto"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">visibility</span>
+                      Detalhes
+                    </Link>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart({
+                          id: produto.id,
+                          name: produto.name,
+                          description: produto.description,
+                          price: produto.price,
+                        });
+                      }}
+                      className="bg-brand-green-900 text-white hover:bg-brand-green-800 hover:shadow-md px-4 py-2.5 rounded-xl transition-all duration-300 font-label-sm uppercase tracking-wider flex items-center gap-1.5 cursor-pointer text-xs font-bold"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
+                      Comprar
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
