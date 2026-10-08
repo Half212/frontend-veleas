@@ -15,6 +15,10 @@ interface Product {
   stockQuantity: number;
   categoryName: string;
   image?: string;
+  images?: string[];
+  waxComposition?: string;
+  burnTime?: string;
+  traditionInfo?: string;
 }
 
 export default function DetalhesProdutoPage() {
@@ -144,13 +148,12 @@ export default function DetalhesProdutoPage() {
     );
   }
 
-  // Galeria com NO MÁXIMO 3 IMAGENS (conforme especificado nos requisitos)
-  const defaultImages = [
-    product.image || "/images/velaartesanal.jpeg",
-    "/images/velaartesanal2.jpeg",
-    "/images/velaartesanal3.jpeg",
-  ];
-  const galleryImages = defaultImages.slice(0, 3);
+  // Galeria com NO MÁXIMO 3 IMAGENS (suporta array de fotos cadastradas ou fallbacks elegantes)
+  const rawGallery = product.images && product.images.length > 0
+    ? product.images
+    : [product.image || "/images/velaartesanal.jpeg", "/images/velaartesanal2.jpeg", "/images/velaartesanal3.jpeg"];
+  
+  const galleryImages = rawGallery.filter(Boolean).slice(0, 3);
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
@@ -194,7 +197,7 @@ export default function DetalhesProdutoPage() {
             {/* Visualizador Principal */}
             <div className="relative aspect-square w-full bg-brand-dark-50 rounded-2xl overflow-hidden border border-brand-dark-200 shadow-inner group">
               <Image
-                src={galleryImages[selectedImageIndex]}
+                src={galleryImages[selectedImageIndex] || "/images/velaartesanal.jpeg"}
                 alt={`${product.name} - Imagem ${selectedImageIndex + 1}`}
                 fill
                 priority
@@ -353,7 +356,7 @@ export default function DetalhesProdutoPage() {
             </button>
           </div>
 
-          {/* Conteúdo da Aba Ativa */}
+          {/* Conteúdo da Aba Ativa com suporte a dados dinâmicos do produto */}
           {activeTab === "basica" && (
             <div className="space-y-6 animate-fadeIn">
               <h3 className="font-display-lg text-2xl text-brand-dark-950 font-bold">
@@ -366,7 +369,7 @@ export default function DetalhesProdutoPage() {
                     Composição da Cera
                   </div>
                   <p className="font-body-md text-sm text-brand-dark-700 leading-relaxed">
-                    100% Cera natural purificada de alta qualidade, sem parafinas tóxicas ou aditivos nocivos à saúde.
+                    {product.waxComposition || "100% Cera natural purificada de alta qualidade, sem parafinas tóxicas ou aditivos nocivos à saúde."}
                   </p>
                 </div>
 
@@ -376,7 +379,7 @@ export default function DetalhesProdutoPage() {
                     Tempo Estimado de Queima
                   </div>
                   <p className="font-body-md text-sm text-brand-dark-700 leading-relaxed">
-                    Aproximadamente 35 a 50 horas de chama uniforme e aroma contínuo do início ao fim.
+                    {product.burnTime || "Aproximadamente 35 a 50 horas de chama uniforme e aroma contínuo do início ao fim."}
                   </p>
                 </div>
 
@@ -386,7 +389,7 @@ export default function DetalhesProdutoPage() {
                     Tradição Familiar
                   </div>
                   <p className="font-body-md text-sm text-brand-dark-700 leading-relaxed">
-                    Produção 100% manual e tradicional em Belém do Pará desde 1938, preservando o saber secular.
+                    {product.traditionInfo || "Produção 100% manual e tradicional em Belém do Pará desde 1938, preservando o saber secular."}
                   </p>
                 </div>
               </div>

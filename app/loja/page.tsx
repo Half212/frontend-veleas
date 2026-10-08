@@ -20,6 +20,10 @@ interface Product {
   stockQuantity: number;
   categoryName: string;
   image?: string;
+  images?: string[];
+  waxComposition?: string;
+  burnTime?: string;
+  traditionInfo?: string;
 }
 
 export default function Loja() {
@@ -44,8 +48,11 @@ export default function Loja() {
     price: "",
     stockQuantity: "",
     categoryId: "",
+    waxComposition: "",
+    burnTime: "",
+    traditionInfo: "",
   });
-  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+  const [editImagesPreview, setEditImagesPreview] = useState<(string | null)[]>([null, null, null]);
   const [isOptimizingImage, setIsOptimizingImage] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
 
@@ -146,20 +153,32 @@ export default function Loja() {
     });
   };
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSlotImageChange = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsOptimizingImage(true);
     try {
       const optimizedBase64 = await compressAndOptimizeImage(file);
-      setEditImagePreview(optimizedBase64);
+      setEditImagesPreview((prev) => {
+        const next = [...prev];
+        next[index] = optimizedBase64;
+        return next;
+      });
     } catch (err) {
       console.error("Erro ao otimizar imagem:", err);
       setActionError("Falha ao processar imagem.");
     } finally {
       setIsOptimizingImage(false);
     }
+  };
+
+  const handleRemoveSlotImage = (index: number) => {
+    setEditImagesPreview((prev) => {
+      const next = [...prev];
+      next[index] = null;
+      return next;
+    });
   };
 
   const handleOpenEdit = (product: Product) => {
@@ -176,8 +195,20 @@ export default function Loja() {
       price: String(product.price),
       stockQuantity: String(product.stockQuantity),
       categoryId: matchedCategory ? String(matchedCategory.id) : (categories[0] ? String(categories[0].id) : "1"),
+      waxComposition: product.waxComposition || "",
+      burnTime: product.burnTime || "",
+      traditionInfo: product.traditionInfo || "",
     });
-    setEditImagePreview(product.image || null);
+
+    const slots: (string | null)[] = [null, null, null];
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      slots[0] = product.images[0] || null;
+      slots[1] = product.images[1] || null;
+      slots[2] = product.images[2] || null;
+    } else if (product.image) {
+      slots[0] = product.image;
+    }
+    setEditImagesPreview(slots);
     setAdminPassword("");
   };
 
@@ -200,6 +231,9 @@ export default function Loja() {
         headers["X-Admin-Password"] = adminPassword;
       }
 
+      const validImages = editImagesPreview.filter((img): img is string => Boolean(img));
+      const primaryImage = validImages[0] || null;
+
       const res = await fetch(`${API_URL}/products/${editingProduct.id}`, {
         method: "PUT",
         headers,
@@ -209,7 +243,11 @@ export default function Loja() {
           price: parseFloat(editFormData.price),
           stockQuantity: parseInt(editFormData.stockQuantity, 10),
           categoryId: parseInt(editFormData.categoryId, 10),
-          image: editImagePreview || null,
+          image: primaryImage,
+          images: validImages,
+          waxComposition: editFormData.waxComposition,
+          burnTime: editFormData.burnTime,
+          traditionInfo: editFormData.traditionInfo,
         }),
       });
 
@@ -576,47 +614,111 @@ export default function Loja() {
                 </select>
               </div>
 
-              {/* Imagem Otimizada */}
-              <div>
-                <label className="block font-label-sm text-brand-dark-700 mb-1 uppercase tracking-wider text-[11px] font-bold">
-                  Imagem do Produto
-                </label>
-                <input
-                  type="file"
-                  id="edit-image-file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
+              {/* Informações Básicas / Especificações Técnicas */}
+              <div className="pt-2 border-t border-brand-dark-200 space-y-3">
+                <span className="block font-label-sm text-brand-green-900 font-bold uppercase tracking-wider text-xs">
+                  Especificações Técnicas (Informações Básicas)
+                </span>
 
-                <div className="flex items-center gap-4 border border-brand-dark-200 bg-brand-dark-50/40 p-3 rounded-xl">
-                  <div className="relative w-20 h-20 rounded-lg border border-brand-dark-200 overflow-hidden bg-white flex-shrink-0">
-                    <Image
-                      src={editImagePreview || "/images/velaartesanal.jpeg"}
-                      alt="Preview"
-                      fill
-                      unoptimized={Boolean(editImagePreview && editImagePreview.startsWith("data:"))}
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label
-                      htmlFor="edit-image-file"
-                      className="px-3 py-1.5 bg-brand-green-100 hover:bg-brand-green-200 text-brand-green-900 font-label-sm text-xs uppercase tracking-wider rounded-lg border border-brand-green-300 cursor-pointer inline-flex items-center gap-1 w-fit font-bold"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">upload</span>
-                      {isOptimizingImage ? "Otimizando..." : "Alterar Imagem"}
-                    </label>
-                    {editImagePreview && (
-                      <button
-                        type="button"
-                        onClick={() => setEditImagePreview(null)}
-                        className="text-red-700 hover:text-red-900 text-xs font-label-sm uppercase tracking-wider text-left font-bold"
-                      >
-                        Remover Imagem
-                      </button>
-                    )}
-                  </div>
+                <div>
+                  <label className="block font-label-sm text-brand-dark-700 mb-1 uppercase tracking-wider text-[10px] font-bold">
+                    Composição da Cera
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.waxComposition}
+                    onChange={(e) => setEditFormData((prev) => ({ ...prev, waxComposition: e.target.value }))}
+                    placeholder="Ex: 100% Cera natural purificada de alta qualidade"
+                    className="w-full px-3.5 py-2 bg-brand-dark-50/50 border border-brand-dark-300 rounded-xl focus:outline-none focus:border-brand-green-800 text-xs font-body-md text-brand-dark-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-label-sm text-brand-dark-700 mb-1 uppercase tracking-wider text-[10px] font-bold">
+                    Tempo Estimado de Queima
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.burnTime}
+                    onChange={(e) => setEditFormData((prev) => ({ ...prev, burnTime: e.target.value }))}
+                    placeholder="Ex: Aproximadamente 35 a 50 horas de chama uniforme"
+                    className="w-full px-3.5 py-2 bg-brand-dark-50/50 border border-brand-dark-300 rounded-xl focus:outline-none focus:border-brand-green-800 text-xs font-body-md text-brand-dark-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-label-sm text-brand-dark-700 mb-1 uppercase tracking-wider text-[10px] font-bold">
+                    Tradição / Origem
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.traditionInfo}
+                    onChange={(e) => setEditFormData((prev) => ({ ...prev, traditionInfo: e.target.value }))}
+                    placeholder="Ex: Produção 100% manual em Belém do Pará desde 1938"
+                    className="w-full px-3.5 py-2 bg-brand-dark-50/50 border border-brand-dark-300 rounded-xl focus:outline-none focus:border-brand-green-800 text-xs font-body-md text-brand-dark-900"
+                  />
+                </div>
+              </div>
+
+              {/* Upload de Até 3 Imagens Otimizadas */}
+              <div className="pt-2 border-t border-brand-dark-200">
+                <label className="block font-label-sm text-brand-dark-700 mb-2 uppercase tracking-wider text-[11px] font-bold">
+                  Fotos do Produto (Até 3 Imagens)
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[0, 1, 2].map((idx) => {
+                    const imgPreview = editImagesPreview[idx];
+                    return (
+                      <div key={idx} className="border border-brand-dark-200 bg-brand-dark-50/40 p-2.5 rounded-xl flex flex-col items-center gap-2">
+                        <span className="text-[10px] font-label-sm uppercase font-bold text-brand-dark-600">
+                          {idx === 0 ? "Foto 1 (Capa)" : `Foto ${idx + 1}`}
+                        </span>
+
+                        <div className="relative w-full aspect-square rounded-lg border border-brand-dark-200 overflow-hidden bg-white shadow-inner">
+                          {imgPreview ? (
+                            <Image
+                              src={imgPreview}
+                              alt={`Preview ${idx + 1}`}
+                              fill
+                              unoptimized={Boolean(imgPreview.startsWith("data:"))}
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-brand-dark-300">
+                              <span className="material-symbols-outlined text-3xl">image</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <input
+                          type="file"
+                          id={`edit-image-file-${idx}`}
+                          accept="image/*"
+                          onChange={(e) => handleSlotImageChange(idx, e)}
+                          className="hidden"
+                        />
+
+                        <div className="flex flex-col w-full gap-1">
+                          <label
+                            htmlFor={`edit-image-file-${idx}`}
+                            className="w-full text-center px-2 py-1 bg-brand-green-100 hover:bg-brand-green-200 text-brand-green-900 font-label-sm text-[11px] uppercase tracking-wider rounded-lg border border-brand-green-300 cursor-pointer font-bold truncate"
+                          >
+                            {isOptimizingImage ? "..." : imgPreview ? "Alterar" : "Upload"}
+                          </label>
+                          {imgPreview && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSlotImage(idx)}
+                              className="w-full text-center text-red-700 hover:text-red-900 text-[10px] font-label-sm uppercase tracking-wider font-bold py-0.5"
+                            >
+                              Remover
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

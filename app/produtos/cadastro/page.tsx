@@ -20,6 +20,11 @@ interface Product {
   stockQuantity: number;
   categoryName?: string;
   description?: string;
+  image?: string;
+  images?: string[];
+  waxComposition?: string;
+  burnTime?: string;
+  traditionInfo?: string;
 }
 
 type AdminTab = "products" | "carousel" | "collections" | "reports";
@@ -78,6 +83,9 @@ export default function PainelAdministrativo() {
     price: "",
     stockQuantity: "",
     categoryId: "",
+    waxComposition: "",
+    burnTime: "",
+    traditionInfo: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,8 +98,8 @@ export default function PainelAdministrativo() {
   const [isCategorySubmitting, setIsCategorySubmitting] = useState(false);
   const [categoryError, setCategoryError] = useState("");
 
-  // Imagem do Produto
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // Imagens do Produto (Até 3)
+  const [imagesPreview, setImagesPreview] = useState<(string | null)[]>([null, null, null]);
   const [isOptimizingImage, setIsOptimizingImage] = useState(false);
 
   // Carregamento de dados após autorização confirmada
@@ -171,7 +179,7 @@ export default function PainelAdministrativo() {
     });
   };
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSlotImageChange = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -183,7 +191,11 @@ export default function PainelAdministrativo() {
     setIsOptimizingImage(true);
     try {
       const optimizedBase64 = await compressAndOptimizeImage(file);
-      setImagePreview(optimizedBase64);
+      setImagesPreview((prev) => {
+        const next = [...prev];
+        next[index] = optimizedBase64;
+        return next;
+      });
     } catch (err) {
       console.error("Erro ao otimizar imagem:", err);
       setProductError("Falha ao processar a imagem selecionada.");
@@ -192,8 +204,12 @@ export default function PainelAdministrativo() {
     }
   };
 
-  const handleRemoveImage = () => {
-    setImagePreview(null);
+  const handleRemoveSlotImage = (index: number) => {
+    setImagesPreview((prev) => {
+      const next = [...prev];
+      next[index] = null;
+      return next;
+    });
   };
 
   const handleInputChange = (
@@ -228,13 +244,20 @@ export default function PainelAdministrativo() {
     setIsSubmitting(true);
 
     try {
+      const validImages = imagesPreview.filter((img): img is string => Boolean(img));
+      const primaryImage = validImages[0] || null;
+
       const payload = {
         name: formData.name.trim(),
         description: formData.description.trim(),
         price: parseFloat(formData.price),
         stockQuantity: parseInt(formData.stockQuantity, 10),
         categoryId: parseInt(formData.categoryId, 10),
-        image: imagePreview || null,
+        image: primaryImage,
+        images: validImages,
+        waxComposition: formData.waxComposition.trim(),
+        burnTime: formData.burnTime.trim(),
+        traditionInfo: formData.traditionInfo.trim(),
       };
 
       const res = await fetch(`${API_URL}/products`, {
@@ -255,8 +278,11 @@ export default function PainelAdministrativo() {
         price: "",
         stockQuantity: "",
         categoryId: "",
+        waxComposition: "",
+        burnTime: "",
+        traditionInfo: "",
       });
-      setImagePreview(null);
+      setImagesPreview([null, null, null]);
       loadProducts();
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -466,83 +492,113 @@ export default function PainelAdministrativo() {
               </div>
 
               <form onSubmit={handleProductSubmit} className="space-y-6">
-                {/* Imagem do Produto */}
+                {/* Fotos do Produto (Até 3 Imagens) */}
                 <div>
                   <label className="block font-label-sm text-brand-dark-700 mb-2 uppercase tracking-wider text-[11px] font-bold">
-                    Foto do Produto (Otimizada para carregamento rápido)
+                    Fotos do Produto (Até 3 Imagens Otimizadas)
                   </label>
 
-                  <input
-                    type="file"
-                    id="product-image-input"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[0, 1, 2].map((idx) => {
+                      const imgPreview = imagesPreview[idx];
+                      return (
+                        <div key={idx} className="border border-brand-dark-200 bg-brand-dark-50/50 p-3 rounded-2xl flex flex-col items-center gap-2">
+                          <span className="text-[11px] font-label-sm uppercase font-bold text-brand-dark-700">
+                            {idx === 0 ? "Foto 1 (Capa)" : `Foto ${idx + 1}`}
+                          </span>
 
-                  {!imagePreview ? (
-                    <label
-                      htmlFor="product-image-input"
-                      className="border-2 border-dashed border-brand-dark-300 hover:border-brand-green-800 bg-brand-dark-50/50 hover:bg-brand-green-50/50 p-6 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all duration-300 group text-center"
-                    >
-                      {isOptimizingImage ? (
-                        <div className="flex flex-col items-center gap-2 py-4">
-                          <div className="w-8 h-8 border-3 border-brand-green-300 border-t-brand-green-900 rounded-full animate-spin"></div>
-                          <span className="font-body-md text-sm text-brand-green-900 font-bold">Otimizando e processando imagem...</span>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="w-14 h-14 bg-brand-green-100 text-brand-green-900 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                            <span className="material-symbols-outlined text-[30px]">add_a_photo</span>
+                          <div className="relative w-full aspect-square rounded-xl border border-brand-dark-200 overflow-hidden bg-white shadow-inner flex items-center justify-center">
+                            {imgPreview ? (
+                              <Image
+                                src={imgPreview}
+                                alt={`Preview ${idx + 1}`}
+                                fill
+                                unoptimized
+                                className="object-cover"
+                              />
+                            ) : (
+                              <span className="material-symbols-outlined text-4xl text-brand-dark-300">add_a_photo</span>
+                            )}
                           </div>
-                          <p className="font-label-sm text-brand-dark-900 uppercase tracking-wider text-xs mb-1 font-bold">
-                            Clique para selecionar uma imagem
-                          </p>
-                          <p className="font-body-md text-xs text-brand-dark-500">
-                            Formatos aceitos: PNG, JPG, WEBP (Compressão e redimensionamento automático)
-                          </p>
-                        </>
-                      )}
+
+                          <input
+                            type="file"
+                            id={`create-image-file-${idx}`}
+                            accept="image/*"
+                            onChange={(e) => handleSlotImageChange(idx, e)}
+                            className="hidden"
+                          />
+
+                          <div className="flex flex-col w-full gap-1.5 mt-1">
+                            <label
+                              htmlFor={`create-image-file-${idx}`}
+                              className="w-full text-center px-3 py-1.5 bg-brand-green-100 hover:bg-brand-green-200 text-brand-green-900 text-xs font-label-sm uppercase tracking-wider rounded-lg border border-brand-green-300 transition-colors cursor-pointer font-bold truncate"
+                            >
+                              {isOptimizingImage ? "Otimizando..." : imgPreview ? "Trocar" : "Selecionar"}
+                            </label>
+                            {imgPreview && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSlotImage(idx)}
+                                className="w-full text-center text-red-700 hover:text-red-900 text-xs font-label-sm uppercase tracking-wider font-bold py-1"
+                              >
+                                Remover
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Especificações Técnicas (Informações Básicas) */}
+                <div className="pt-4 border-t border-brand-dark-200 space-y-4">
+                  <span className="block font-label-sm text-brand-green-900 font-bold uppercase tracking-wider text-xs">
+                    Especificações Técnicas (Exibidas em INFORMAÇÕES BÁSICAS)
+                  </span>
+
+                  <div>
+                    <label className="block font-label-sm text-brand-dark-700 mb-1 uppercase tracking-wider text-[11px] font-bold">
+                      Composição da Cera
                     </label>
-                  ) : (
-                    <div className="relative rounded-2xl overflow-hidden border border-brand-dark-200 bg-brand-dark-50/50 p-4 flex flex-col sm:flex-row items-center gap-4 shadow-inner">
-                      <div className="relative w-32 h-32 rounded-xl overflow-hidden border border-brand-dark-200 shadow flex-shrink-0 bg-white">
-                        <Image
-                          src={imagePreview}
-                          alt="Preview da imagem"
-                          fill
-                          unoptimized
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="flex-grow text-center sm:text-left">
-                        <div className="flex items-center justify-center sm:justify-start gap-1.5 text-brand-green-800 font-label-sm text-xs uppercase tracking-wider mb-1 font-bold">
-                          <span className="material-symbols-outlined text-[18px]">verified</span>
-                          Imagem Otimizada com Sucesso!
-                        </div>
-                        <p className="font-body-md text-xs text-brand-dark-600 mb-3">
-                          Pronta para alta performance sem perda de nitidez visual.
-                        </p>
-                        <div className="flex flex-wrap justify-center sm:justify-start gap-2">
-                          <label
-                            htmlFor="product-image-input"
-                            className="px-3.5 py-1.5 bg-brand-green-100 hover:bg-brand-green-200 text-brand-green-900 text-xs font-label-sm uppercase tracking-wider rounded-lg border border-brand-green-300 transition-colors cursor-pointer flex items-center gap-1 font-bold"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">edit</span>
-                            Trocar
-                          </label>
-                          <button
-                            type="button"
-                            onClick={handleRemoveImage}
-                            className="px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-label-sm uppercase tracking-wider rounded-lg border border-red-200 transition-colors flex items-center gap-1 cursor-pointer font-bold"
-                          >
-                            <span className="material-symbols-outlined text-[16px]">delete</span>
-                            Remover
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                    <input
+                      type="text"
+                      name="waxComposition"
+                      value={formData.waxComposition}
+                      onChange={handleInputChange}
+                      placeholder="Ex: 100% Cera natural purificada de alta qualidade"
+                      className="w-full px-4 py-2.5 bg-brand-dark-50/50 border border-brand-dark-300 rounded-xl focus:outline-none focus:border-brand-green-800 text-brand-dark-900 font-body-md"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-label-sm text-brand-dark-700 mb-1 uppercase tracking-wider text-[11px] font-bold">
+                      Tempo Estimado de Queima
+                    </label>
+                    <input
+                      type="text"
+                      name="burnTime"
+                      value={formData.burnTime}
+                      onChange={handleInputChange}
+                      placeholder="Ex: Aproximadamente 35 a 50 horas de chama uniforme"
+                      className="w-full px-4 py-2.5 bg-brand-dark-50/50 border border-brand-dark-300 rounded-xl focus:outline-none focus:border-brand-green-800 text-brand-dark-900 font-body-md"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-label-sm text-brand-dark-700 mb-1 uppercase tracking-wider text-[11px] font-bold">
+                      Tradição / Origem Artesanal
+                    </label>
+                    <input
+                      type="text"
+                      name="traditionInfo"
+                      value={formData.traditionInfo}
+                      onChange={handleInputChange}
+                      placeholder="Ex: Produção 100% manual em Belém do Pará desde 1938"
+                      className="w-full px-4 py-2.5 bg-brand-dark-50/50 border border-brand-dark-300 rounded-xl focus:outline-none focus:border-brand-green-800 text-brand-dark-900 font-body-md"
+                    />
+                  </div>
                 </div>
 
                 {/* Nome do Produto */}
