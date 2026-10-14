@@ -1,3 +1,5 @@
+import { Order } from "./orders";
+
 export type ReportPeriod = "today" | "7days" | "30days" | "month" | "year" | "all";
 
 export interface SalesKPIs {
@@ -58,4 +60,7 @@ export interface FullReportData {
   productRanking: ProductSalesReport[];
   categoryBreakdown: CategorySalesReport[];
   customerMetrics: CustomerReportData;
+  isRealDatabaseData?: boolean;
+  databaseSource?: string;
+  recentOrders?: Order[];
 }

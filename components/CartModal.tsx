@@ -4,6 +4,7 @@ import { useCart } from "@/context/CartContext";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { orderService } from "@/services/orderService";
 
 export default function CartModal() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function CartModal() {
   const [deliveryNotes, setDeliveryNotes] = useState("");
   const [selectedStore, setSelectedStore] = useState<"matriz" | "filial">("matriz");
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
 
   useEffect(() => {
     if (isCartOpen) {
@@ -36,8 +38,8 @@ export default function CartModal() {
 
   if (!isCartOpen) return null;
 
-  const handleCheckoutWhatsApp = () => {
-    if (cart.length === 0) return;
+  const handleCheckoutWhatsApp = async () => {
+    if (cart.length === 0 || isSubmittingOrder) return;
 
     const isLoggedIn = typeof window !== "undefined" && localStorage.getItem("isLoggedIn") === "true";
     if (!isLoggedIn) {
@@ -45,47 +47,75 @@ export default function CartModal() {
       return;
     }
 
-    const phoneStore = selectedStore === "matriz" ? "5591920023191" : "5591980726020";
-    const storeName = selectedStore === "matriz" ? "Loja Matriz (Cidade Velha)" : "Loja Filial (Shopping Pátio Belém)";
+    setIsSubmittingOrder(true);
 
-    const formattedItems = cart
-      .map(
-        (item, index) =>
-          `${index + 1}. *${item.name}*\n   • Qtd: ${item.quantity}x\n   • Subtotal: ${new Intl.NumberFormat(
-            "pt-BR",
-            { style: "currency", currency: "BRL" }
-          ).format(item.price * item.quantity)}`
-      )
-      .join("\n\n");
+    try {
+      // 1. Salva o pedido no banco de dados
+      const createdOrder = await orderService.createOrder({
+        customerName: customerName.trim() || "Cliente",
+        customerPhone: customerPhone.trim(),
+        deliveryNotes: deliveryNotes.trim(),
+        storeLocation: selectedStore,
+        totalAmount: totalPrice,
+        items: cart.map((item) => ({
+          productId: typeof item.id === "number" ? item.id : Number(item.id) || 1,
+          productName: item.name,
+          categoryName: "Geral",
+          quantity: item.quantity,
+          unitPrice: item.price,
+        })),
+      });
 
-    const candle = "\u{1F56F}\u{FE0F}";
-    const pin = "\u{1F4CD}";
-    const user = "\u{1F464}";
-    const phone = "\u{1F4DE}";
-    const memo = "\u{1F4DD}";
-    const packageIcon = "\u{1F4E6}";
-    const money = "\u{1F4B0}";
+      const orderNumber = createdOrder?.id ? `#${createdOrder.id}` : "";
 
-    const message = `${candle} *NOVO PEDIDO - VELAS SÃO JOÃO* ${candle}\n\n` +
-      `${pin} *Unidade de Atendimento*: ${storeName}\n` +
-      `${user} *Cliente*: ${customerName.trim() || "Não informado"}\n` +
-      (customerPhone.trim() ? `${phone} *Telefone*: ${customerPhone.trim()}\n` : "") +
-      (deliveryNotes.trim() ? `${memo} *Observações/Endereço*: ${deliveryNotes.trim()}\n` : "") +
-      `----------------------------------------\n` +
-      `${packageIcon} *ITENS DO PEDIDO*:\n\n${formattedItems}\n` +
-      `----------------------------------------\n` +
-      `${money} *VALOR TOTAL*: *${new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-      }).format(totalPrice)}*\n\n` +
-      `Gostaria de confirmar a disponibilidade e finalizar o pagamento!`;
+      const phoneStore = selectedStore === "matriz" ? "5591920023191" : "5591980726020";
+      const storeName = selectedStore === "matriz" ? "Loja Matriz (Cidade Velha)" : "Loja Filial (Shopping Pátio Belém)";
 
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${phoneStore}?text=${encodedMessage}`;
+      const formattedItems = cart
+        .map(
+          (item, index) =>
+            `${index + 1}. *${item.name}*\n   • Qtd: ${item.quantity}x\n   • Subtotal: ${new Intl.NumberFormat(
+              "pt-BR",
+              { style: "currency", currency: "BRL" }
+            ).format(item.price * item.quantity)}`
+        )
+        .join("\n\n");
 
-    window.open(whatsappUrl, "_blank");
-    clearCart();
-    setIsCartOpen(false);
+      const candle = "\u{1F56F}\u{FE0F}";
+      const pin = "\u{1F4CD}";
+      const user = "\u{1F464}";
+      const phone = "\u{1F4DE}";
+      const memo = "\u{1F4DD}";
+      const packageIcon = "\u{1F4E6}";
+      const money = "\u{1F4B0}";
+      const check = "\u{2705}";
+
+      const message = `${candle} *NOVO PEDIDO ${orderNumber} - VELAS SÃO JOÃO* ${candle}\n\n` +
+        `${check} *Pedido Registrado no Sistema*: ${orderNumber || "Sim"}\n` +
+        `${pin} *Unidade de Atendimento*: ${storeName}\n` +
+        `${user} *Cliente*: ${customerName.trim() || "Não informado"}\n` +
+        (customerPhone.trim() ? `${phone} *Telefone*: ${customerPhone.trim()}\n` : "") +
+        (deliveryNotes.trim() ? `${memo} *Observações/Endereço*: ${deliveryNotes.trim()}\n` : "") +
+        `----------------------------------------\n` +
+        `${packageIcon} *ITENS DO PEDIDO*:\n\n${formattedItems}\n` +
+        `----------------------------------------\n` +
+        `${money} *VALOR TOTAL*: *${new Intl.NumberFormat("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        }).format(totalPrice)}*\n\n` +
+        `Gostaria de confirmar a disponibilidade e finalizar o pagamento!`;
+
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/${phoneStore}?text=${encodedMessage}`;
+
+      window.open(whatsappUrl, "_blank");
+      clearCart();
+      setIsCartOpen(false);
+    } catch (err) {
+      console.error("Erro ao processar pedido:", err);
+    } finally {
+      setIsSubmittingOrder(false);
+    }
   };
 
   return (
@@ -243,10 +273,20 @@ export default function CartModal() {
             {/* Action Buttons */}
             <button
               onClick={handleCheckoutWhatsApp}
-              className="w-full bg-brand-green-900 hover:bg-brand-green-800 text-white font-label-lg uppercase tracking-widest py-3.5 rounded-lg shadow-lg transition-colors flex items-center justify-center gap-2"
+              disabled={isSubmittingOrder}
+              className="w-full bg-brand-green-900 hover:bg-brand-green-800 disabled:opacity-70 disabled:cursor-not-allowed text-white font-label-lg uppercase tracking-widest py-3.5 rounded-lg shadow-lg transition-colors flex items-center justify-center gap-2 cursor-pointer font-bold"
             >
-              <span className="material-symbols-outlined text-xl">chat</span>
-              Finalizar Pedido via WhatsApp
+              {isSubmittingOrder ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Gravando no Banco...</span>
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-xl">chat</span>
+                  <span>Finalizar Pedido via WhatsApp</span>
+                </>
+              )}
             </button>
           </div>
         )}
