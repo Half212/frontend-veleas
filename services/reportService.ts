@@ -1,4 +1,4 @@
-import { FullReportData, ReportPeriod, ProductSalesReport, CategorySalesReport, SalesTimeSeriesPoint } from "@/types/reports";
+import { FullReportData, ReportPeriod, ProductSalesReport, CategorySalesReport, SalesTimeSeriesPoint, CustomDateRange } from "@/types/reports";
 import { Order } from "@/types/orders";
 
 interface ProductInput {
@@ -33,10 +33,12 @@ export const reportService = {
     period: ReportPeriod = "month",
     liveProducts: ProductInput[] = [],
     liveOrders: Order[] = [],
-    isFromDatabase: boolean = true
+    isFromDatabase: boolean = true,
+    customRange?: CustomDateRange
   ): FullReportData {
-    // 1. Filtra os pedidos com base no período selecionado
     const now = new Date();
+
+    // 1. Filtra os pedidos com base no período selecionado
     const filteredOrders = liveOrders.filter((order) => {
       if (!order.createdAt) return true;
       const orderDate = new Date(order.createdAt);
@@ -63,6 +65,18 @@ export const reportService = {
           const startOfYear = new Date(now.getFullYear(), 0, 1);
           return orderDate >= startOfYear;
         }
+        case "custom": {
+          if (customRange?.startDate && customRange?.endDate) {
+            const [sYear, sMonth, sDay] = customRange.startDate.split("-").map(Number);
+            const start = new Date(sYear, sMonth - 1, sDay, 0, 0, 0, 0);
+
+            const [eYear, eMonth, eDay] = customRange.endDate.split("-").map(Number);
+            const end = new Date(eYear, eMonth - 1, eDay, 23, 59, 59, 999);
+
+            return orderDate >= start && orderDate <= end;
+          }
+          return true;
+        }
         case "all":
         default:
           return true;
@@ -73,11 +87,11 @@ export const reportService = {
 
     // Se houver pedidos no banco de dados para o período selecionado, calcula as métricas reais
     if (hasRealOrders) {
-      return this.calculateReportFromRealOrders(period, filteredOrders, liveProducts, isFromDatabase);
+      return this.calculateReportFromRealOrders(period, filteredOrders, liveProducts, isFromDatabase, customRange);
     }
 
     // Fallback calibrado caso o banco ainda não tenha pedidos no filtro específico
-    return this.calculateReportWithSimulatedData(period, liveProducts, liveOrders, isFromDatabase);
+    return this.calculateReportWithSimulatedData(period, liveProducts, liveOrders, isFromDatabase, customRange);
   },
 
   /**
@@ -87,7 +101,8 @@ export const reportService = {
     period: ReportPeriod,
     orders: Order[],
     liveProducts: ProductInput[],
-    isFromDatabase: boolean
+    isFromDatabase: boolean,
+    customRange?: CustomDateRange
   ): FullReportData {
     const totalRevenue = orders.reduce((acc, o) => acc + Number(o.totalAmount || 0), 0);
     const totalOrders = orders.length;
@@ -159,6 +174,18 @@ export const reportService = {
     let runningCumulativeRevenue = 0;
     let criticalStockCount = 0;
 
+    // Determina o divisor de consumo diário
+    let periodDays = 30;
+    if (period === "today") periodDays = 1;
+    else if (period === "7days") periodDays = 7;
+    else if (period === "30days" || period === "month") periodDays = 30;
+    else if (period === "year") periodDays = 365;
+    else if (period === "custom" && customRange?.startDate && customRange?.endDate) {
+      const s = new Date(customRange.startDate);
+      const e = new Date(customRange.endDate);
+      periodDays = Math.max(1, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)));
+    }
+
     const productRanking: ProductSalesReport[] = productList.map((p) => {
       runningCumulativeRevenue += p.revenue;
       const revenueShare = totalRevenue > 0 ? (p.revenue / totalRevenue) * 100 : 0;
@@ -178,7 +205,7 @@ export const reportService = {
       const live = liveProducts.find((lp) => lp.id === p.id || lp.name.toLowerCase() === p.name.toLowerCase());
       const stockQuantity = live ? live.stockQuantity : 15;
 
-      const dailyConsumption = Math.max(0.1, p.unitsSold / (period === "today" ? 1 : period === "7days" ? 7 : 30));
+      const dailyConsumption = Math.max(0.1, p.unitsSold / periodDays);
       const daysOfStockRemaining = Math.round(stockQuantity / dailyConsumption);
 
       let stockStatus: "normal" | "warning" | "critical" | "out_of_stock" = "normal";
@@ -231,7 +258,7 @@ export const reportService = {
     categoryBreakdown.sort((a, b) => b.totalRevenue - a.totalRevenue);
 
     // Série temporal baseada nas datas reais dos pedidos
-    const timeSeries = this.buildTimeSeriesFromOrders(period, orders);
+    const timeSeries = this.buildTimeSeriesFromOrders(period, orders, customRange);
 
     // Métricas de clientes e lojas (Matriz vs. Filial)
     const uniqueCustomers = new Set(orders.map((o) => o.customerPhone || o.customerName)).size;
@@ -247,6 +274,7 @@ export const reportService = {
 
     return {
       period,
+      customRange,
       kpis: {
         totalRevenue,
         revenueGrowth: 18.5,
@@ -272,14 +300,18 @@ export const reportService = {
       },
       isRealDatabaseData: isFromDatabase,
       databaseSource: isFromDatabase ? "PostgreSQL (Neon Cloud)" : "Cache Local (Sincronizado)",
-      recentOrders: orders.slice(0, 10),
+      recentOrders: orders.slice(0, 15),
     };
   },
 
   /**
    * Constrói série temporal a partir dos pedidos reais
    */
-  buildTimeSeriesFromOrders(period: ReportPeriod, orders: Order[]): SalesTimeSeriesPoint[] {
+  buildTimeSeriesFromOrders(
+    period: ReportPeriod,
+    orders: Order[],
+    customRange?: CustomDateRange
+  ): SalesTimeSeriesPoint[] {
     if (period === "today") {
       const slots = [
         { label: "08h-10h", min: 8, max: 10, revenue: 0, orders: 0 },
@@ -347,7 +379,90 @@ export const reportService = {
       return weeks.map((w) => ({ label: w.label, revenue: Math.round(w.revenue), orders: w.orders }));
     }
 
-    // Ano
+    // Período Personalizado
+    if (period === "custom" && customRange?.startDate && customRange?.endDate) {
+      const [sYear, sMonth, sDay] = customRange.startDate.split("-").map(Number);
+      const start = new Date(sYear, sMonth - 1, sDay);
+      const [eYear, eMonth, eDay] = customRange.endDate.split("-").map(Number);
+      const end = new Date(eYear, eMonth - 1, eDay);
+
+      const diffDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+
+      // Se for até 14 dias: cria um ponto por dia
+      if (diffDays <= 14) {
+        const daySlots = Array.from({ length: diffDays }).map((_, i) => {
+          const d = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
+          const dayFormatted = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+          return {
+            dateKey: `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`,
+            label: dayFormatted,
+            revenue: 0,
+            orders: 0,
+          };
+        });
+
+        orders.forEach((o) => {
+          const d = new Date(o.createdAt);
+          if (!isNaN(d.getTime())) {
+            const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+            const slot = daySlots.find((s) => s.dateKey === key);
+            if (slot) {
+              slot.revenue += Number(o.totalAmount || 0);
+              slot.orders += 1;
+            }
+          }
+        });
+
+        return daySlots.map((s) => ({ label: s.label, revenue: Math.round(s.revenue), orders: s.orders }));
+      }
+
+      // Se for de 15 a 60 dias: agrupa por semanas
+      if (diffDays <= 60) {
+        const numWeeks = Math.ceil(diffDays / 7);
+        const weekSlots = Array.from({ length: Math.min(8, numWeeks) }).map((_, i) => ({
+          label: `Semana ${i + 1}`,
+          revenue: 0,
+          orders: 0,
+        }));
+
+        orders.forEach((o) => {
+          const d = new Date(o.createdAt);
+          if (!isNaN(d.getTime())) {
+            const dayOffset = Math.floor((d.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+            const wIdx = Math.min(weekSlots.length - 1, Math.max(0, Math.floor(dayOffset / 7)));
+            weekSlots[wIdx].revenue += Number(o.totalAmount || 0);
+            weekSlots[wIdx].orders += 1;
+          }
+        });
+
+        return weekSlots.map((w) => ({ label: w.label, revenue: Math.round(w.revenue), orders: w.orders }));
+      }
+
+      // Se for mais de 60 dias: agrupa por meses
+      const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+      const monthMap = new Map<string, { label: string; revenue: number; orders: number }>();
+
+      orders.forEach((o) => {
+        const d = new Date(o.createdAt);
+        if (!isNaN(d.getTime())) {
+          const label = `${months[d.getMonth()]}/${String(d.getFullYear()).slice(-2)}`;
+          const existing = monthMap.get(label) || { label, revenue: 0, orders: 0 };
+          existing.revenue += Number(o.totalAmount || 0);
+          existing.orders += 1;
+          monthMap.set(label, existing);
+        }
+      });
+
+      if (monthMap.size > 0) {
+        return Array.from(monthMap.values()).map((m) => ({
+          label: m.label,
+          revenue: Math.round(m.revenue),
+          orders: m.orders,
+        }));
+      }
+    }
+
+    // Ano ou Tudo
     const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
     const monthSlots = months.map((m) => ({ label: m, revenue: 0, orders: 0 }));
 
@@ -370,7 +485,8 @@ export const reportService = {
     period: ReportPeriod,
     liveProducts: ProductInput[],
     liveOrders: Order[],
-    isFromDatabase: boolean
+    isFromDatabase: boolean,
+    customRange?: CustomDateRange
   ): FullReportData {
     let periodMultiplier = 1;
     let timeSeriesPoints: SalesTimeSeriesPoint[] = [];
@@ -399,6 +515,22 @@ export const reportService = {
           { label: "Domingo", revenue: 3400, orders: 52 },
         ];
         break;
+      case "custom": {
+        let diffDays = 15;
+        if (customRange?.startDate && customRange?.endDate) {
+          const s = new Date(customRange.startDate);
+          const e = new Date(customRange.endDate);
+          diffDays = Math.max(1, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+        }
+        periodMultiplier = Math.max(0.1, Number((diffDays / 30).toFixed(2)));
+        timeSeriesPoints = [
+          { label: "Fase 1", revenue: Math.round(5800 * periodMultiplier), orders: Math.round(95 * periodMultiplier) },
+          { label: "Fase 2", revenue: Math.round(8200 * periodMultiplier), orders: Math.round(140 * periodMultiplier) },
+          { label: "Fase 3", revenue: Math.round(11400 * periodMultiplier), orders: Math.round(180 * periodMultiplier) },
+          { label: "Fase 4", revenue: Math.round(9600 * periodMultiplier), orders: Math.round(160 * periodMultiplier) },
+        ];
+        break;
+      }
       case "30days":
       case "month":
         periodMultiplier = 1.0;
@@ -537,6 +669,7 @@ export const reportService = {
 
     return {
       period,
+      customRange,
       kpis: {
         totalRevenue: grandTotalRevenue,
         revenueGrowth: 14.8,
@@ -562,7 +695,7 @@ export const reportService = {
       },
       isRealDatabaseData: isFromDatabase,
       databaseSource: isFromDatabase ? "PostgreSQL (Neon Cloud)" : "Modo Demonstrativo Calibrado",
-      recentOrders: liveOrders.slice(0, 10),
+      recentOrders: liveOrders.slice(0, 15),
     };
   },
 
@@ -603,7 +736,12 @@ export const reportService = {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `relatorio_vendas_velassaojoao_${report.period}_${Date.now()}.csv`);
+
+    const suffix = report.period === "custom" && report.customRange
+      ? `custom_${report.customRange.startDate}_a_${report.customRange.endDate}`
+      : `${report.period}`;
+
+    link.setAttribute("download", `relatorio_vendas_velassaojoao_${suffix}_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

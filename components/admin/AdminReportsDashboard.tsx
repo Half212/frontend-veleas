@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { reportService } from "@/services/reportService";
 import { orderService } from "@/services/orderService";
-import { FullReportData, ReportPeriod } from "@/types/reports";
+import { FullReportData, ReportPeriod, CustomDateRange } from "@/types/reports";
 import { Order } from "@/types/orders";
 
 interface Props {
@@ -16,6 +16,13 @@ interface Props {
   }>;
 }
 
+const formatDateToInput = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export default function AdminReportsDashboard({ products = [] }: Props) {
   const [period, setPeriod] = useState<ReportPeriod>("month");
   const [searchFilter, setSearchFilter] = useState("");
@@ -27,11 +34,25 @@ export default function AdminReportsDashboard({ products = [] }: Props) {
   const [isCreatingTestOrder, setIsCreatingTestOrder] = useState(false);
   const [showRecentOrdersTable, setShowRecentOrdersTable] = useState(true);
 
+  // Estados para o Período de Escolha Própria (Personalizado)
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return formatDateToInput(d);
+  });
+  const [endDate, setEndDate] = useState(() => formatDateToInput(new Date()));
+  const [appliedCustomRange, setAppliedCustomRange] = useState<CustomDateRange>({
+    startDate: startDate,
+    endDate: endDate,
+  });
+
   // Função centralizada para carregar pedidos do banco de dados
   const fetchOrders = useCallback(async (currentPeriod?: ReportPeriod) => {
     setIsLoading(true);
     try {
-      const result = await orderService.getOrders(currentPeriod || period);
+      // Quando for customizado ou all, buscamos a lista completa para o frontend filtrar exatamente no range
+      const queryPeriod = currentPeriod === "custom" ? "all" : currentPeriod || period;
+      const result = await orderService.getOrders(queryPeriod);
       setOrders(result.orders);
       setIsFromDatabase(result.isFromDatabase);
     } catch (err) {
@@ -54,9 +75,45 @@ export default function AdminReportsDashboard({ products = [] }: Props) {
     return () => unsubscribe();
   }, [fetchOrders, period]);
 
-  // Dispara novo cálculo quando o período ou a lista de pedidos muda
+  // Aplicar o filtro de datas customizadas
+  const handleApplyCustomRange = (start?: string, end?: string) => {
+    const newStart = start || startDate;
+    const newEnd = end || endDate;
+
+    if (!newStart || !newEnd) return;
+    if (newStart > newEnd) {
+      alert("A data inicial não pode ser posterior à data final.");
+      return;
+    }
+
+    setStartDate(newStart);
+    setEndDate(newEnd);
+    setAppliedCustomRange({ startDate: newStart, endDate: newEnd });
+    setPeriod("custom");
+    fetchOrders("custom");
+  };
+
+  // Atalhos rápidos de períodos
+  const setQuickCustomRange = (daysAgo: number) => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - daysAgo);
+
+    const startStr = formatDateToInput(start);
+    const endStr = formatDateToInput(end);
+
+    handleApplyCustomRange(startStr, endStr);
+  };
+
+  // Dispara novo cálculo quando o período, intervalo customizado ou pedidos mudarem
   const report: FullReportData | null = isClient
-    ? reportService.generateReport(period, products, orders, isFromDatabase)
+    ? reportService.generateReport(
+        period,
+        products,
+        orders,
+        isFromDatabase,
+        period === "custom" ? appliedCustomRange : undefined
+      )
     : null;
 
   // Cria um pedido de teste rápido no banco de dados para demonstrar a reatividade ao vivo
@@ -145,8 +202,13 @@ export default function AdminReportsDashboard({ products = [] }: Props) {
   // Calcula o valor máximo para a escala do gráfico
   const maxTimeSeriesRevenue = Math.max(...report.timeSeries.map((t) => t.revenue), 1);
 
+  // Formatação amigável das datas do período personalizado
+  const formattedCustomDateRange = appliedCustomRange.startDate && appliedCustomRange.endDate
+    ? `${appliedCustomRange.startDate.split("-").reverse().join("/")} até ${appliedCustomRange.endDate.split("-").reverse().join("/")}`
+    : "";
+
   return (
-    <div className="space-y-8 animate-fadeIn printable-report">
+    <div className="space-y-6 animate-fadeIn printable-report">
       {/* Barra de Filtros & Ações de Exportação */}
       <div className="bg-white p-6 md:p-8 rounded-2xl border border-brand-dark-200 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
@@ -166,6 +228,14 @@ export default function AdminReportsDashboard({ products = [] }: Props) {
               <span className={`w-2 h-2 rounded-full ${report.isRealDatabaseData ? "bg-emerald-600 animate-pulse" : "bg-amber-500"}`}></span>
               <span>{report.databaseSource || "PostgreSQL Neon"} ({orders.length} pedidos)</span>
             </span>
+
+            {/* Tag do Período Ativo */}
+            {period === "custom" && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold bg-brand-green-100 text-brand-green-900 border border-brand-green-300">
+                <span className="material-symbols-outlined text-[14px]">calendar_month</span>
+                <span>{formattedCustomDateRange}</span>
+              </span>
+            )}
           </div>
 
           <h2 className="font-display-lg text-2xl md:text-3xl text-brand-dark-950 font-bold">
@@ -178,8 +248,8 @@ export default function AdminReportsDashboard({ products = [] }: Props) {
 
         {/* Controles de Período, Atualização & Exportação */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Seletor de Período */}
-          <div className="bg-brand-dark-100 p-1 rounded-xl flex items-center gap-1 border border-brand-dark-200">
+          {/* Seletor de Período com Aba Personalizada */}
+          <div className="bg-brand-dark-100 p-1 rounded-xl flex flex-wrap items-center gap-1 border border-brand-dark-200">
             {[
               { label: "Hoje", value: "today" },
               { label: "7 Dias", value: "7days" },
@@ -187,21 +257,27 @@ export default function AdminReportsDashboard({ products = [] }: Props) {
               { label: "Mês", value: "month" },
               { label: "Ano", value: "year" },
               { label: "Tudo", value: "all" },
+              { label: "Personalizado", value: "custom" },
             ].map((p) => (
               <button
                 key={p.value}
                 onClick={() => {
                   const newPeriod = p.value as ReportPeriod;
                   setPeriod(newPeriod);
-                  fetchOrders(newPeriod);
+                  if (newPeriod !== "custom") {
+                    fetchOrders(newPeriod);
+                  }
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-label-sm uppercase tracking-wider font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-label-sm uppercase tracking-wider font-bold transition-all cursor-pointer flex items-center gap-1 ${
                   period === p.value
                     ? "bg-white text-brand-green-900 shadow-sm"
                     : "text-brand-dark-600 hover:text-brand-dark-950"
                 }`}
               >
-                {p.label}
+                {p.value === "custom" && (
+                  <span className="material-symbols-outlined text-[15px]">date_range</span>
+                )}
+                <span>{p.label}</span>
               </button>
             ))}
           </div>
@@ -252,6 +328,80 @@ export default function AdminReportsDashboard({ products = [] }: Props) {
         </div>
       </div>
 
+      {/* ABA / SEÇÃO EXPANSÍVEL: Período de Escolha Própria (Data Inicial e Data Final) */}
+      {period === "custom" && (
+        <div className="bg-gradient-to-r from-brand-green-50/90 to-brand-green-100/50 p-6 rounded-2xl border-2 border-brand-green-300 shadow-sm animate-fadeIn">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-brand-green-950 font-display-md text-lg font-bold">
+                <span className="material-symbols-outlined text-brand-green-900">calendar_month</span>
+                <span>Intervalo de Datas Personalizado</span>
+              </div>
+              <p className="text-xs font-body-md text-brand-dark-600">
+                Selecione o período inicial e final para recalcular receita, curva ABC e giro de estoque.
+              </p>
+            </div>
+
+            {/* Inputs de Data Inicial e Final */}
+            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+              <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-brand-dark-300 shadow-xs">
+                <label className="text-[11px] font-label-sm uppercase tracking-wider text-brand-dark-500 font-bold">
+                  De:
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="text-xs font-body-md text-brand-dark-900 font-semibold focus:outline-none bg-transparent cursor-pointer"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-brand-dark-300 shadow-xs">
+                <label className="text-[11px] font-label-sm uppercase tracking-wider text-brand-dark-500 font-bold">
+                  Até:
+                </label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="text-xs font-body-md text-brand-dark-900 font-semibold focus:outline-none bg-transparent cursor-pointer"
+                />
+              </div>
+
+              <button
+                onClick={() => handleApplyCustomRange()}
+                className="px-4 py-2.5 bg-brand-green-900 hover:bg-brand-green-800 text-white rounded-xl font-label-sm text-xs uppercase tracking-wider font-bold transition-all shadow flex items-center gap-1.5 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">check</span>
+                <span>Filtrar Período</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Atalhos Rápidos de Seleção */}
+          <div className="mt-4 pt-3 border-t border-brand-green-200/60 flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-label-sm uppercase tracking-wider text-brand-dark-500 font-bold mr-1">
+              Atalhos Rápidos:
+            </span>
+            {[
+              { label: "Últimos 15 dias", days: 15 },
+              { label: "Últimos 45 dias", days: 45 },
+              { label: "Últimos 60 dias", days: 60 },
+              { label: "Últimos 90 dias (Trimestre)", days: 90 },
+              { label: "Últimos 180 dias (Semestre)", days: 180 },
+            ].map((shortcut) => (
+              <button
+                key={shortcut.days}
+                onClick={() => setQuickCustomRange(shortcut.days)}
+                className="px-2.5 py-1 bg-white hover:bg-brand-green-50 text-brand-green-900 rounded-lg text-[11px] font-label-sm border border-brand-green-200 transition-colors font-medium shadow-2xs cursor-pointer"
+              >
+                {shortcut.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 5 Cards de KPIs Executivos */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* KPI 1: Faturamento */}
@@ -269,7 +419,7 @@ export default function AdminReportsDashboard({ products = [] }: Props) {
           </div>
           <div className="mt-2 flex items-center gap-1 text-xs font-label-sm text-emerald-700 font-bold">
             <span className="material-symbols-outlined text-[16px]">trending_up</span>
-            <span>+{report.kpis.revenueGrowth}% no ritmo atual</span>
+            <span>+{report.kpis.revenueGrowth}% no ritmo do período</span>
           </div>
         </div>
 
@@ -357,7 +507,9 @@ export default function AdminReportsDashboard({ products = [] }: Props) {
                 Evolução do Faturamento & Pedidos
               </h3>
               <p className="font-body-md text-brand-dark-500 text-xs mt-0.5">
-                Distribuição temporal dos pedidos registrados no banco de dados
+                {period === "custom"
+                  ? `Distribuição temporal entre ${formattedCustomDateRange}`
+                  : "Distribuição temporal dos pedidos registrados no banco de dados"}
               </p>
             </div>
             <span className="text-xs font-label-sm text-brand-green-800 bg-brand-green-50 px-2.5 py-1 rounded-full border border-brand-green-200 font-bold">
@@ -366,11 +518,11 @@ export default function AdminReportsDashboard({ products = [] }: Props) {
           </div>
 
           {/* Gráfico de Barras Customizado Responsivo */}
-          <div className="h-64 flex items-end gap-3 md:gap-6 pt-8 pb-2 border-b border-brand-dark-200">
+          <div className="h-64 flex items-end gap-2 md:gap-4 pt-8 pb-2 border-b border-brand-dark-200 overflow-x-auto">
             {report.timeSeries.map((item, idx) => {
               const heightPercent = Math.max(12, Math.round((item.revenue / maxTimeSeriesRevenue) * 100));
               return (
-                <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group relative">
+                <div key={idx} className="flex-1 min-w-[32px] flex flex-col items-center h-full justify-end group relative">
                   {/* Tooltip Hover */}
                   <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-opacity bg-brand-dark-950 text-white text-[11px] py-1 px-2.5 rounded-lg shadow-xl pointer-events-none whitespace-nowrap z-20 font-label-sm">
                     {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(item.revenue)}
@@ -388,7 +540,7 @@ export default function AdminReportsDashboard({ products = [] }: Props) {
                   </div>
 
                   {/* Rótulo Eixo X */}
-                  <span className="text-[11px] font-label-sm text-brand-dark-600 mt-2 text-center truncate max-w-full font-medium">
+                  <span className="text-[10px] md:text-[11px] font-label-sm text-brand-dark-600 mt-2 text-center truncate max-w-full font-medium">
                     {item.label}
                   </span>
                 </div>

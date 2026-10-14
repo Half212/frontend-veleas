@@ -1,6 +1,11 @@
 import { Order } from "./orders";
 
-export type ReportPeriod = "today" | "7days" | "30days" | "month" | "year" | "all";
+export type ReportPeriod = "today" | "7days" | "30days" | "month" | "year" | "all" | "custom";
+
+export interface CustomDateRange {
+  startDate: string; // formato YYYY-MM-DD
+  endDate: string;   // formato YYYY-MM-DD
+}
 
 export interface SalesKPIs {
   totalRevenue: number;
@@ -55,6 +60,7 @@ export interface CustomerReportData {
 
 export interface FullReportData {
   period: ReportPeriod;
+  customRange?: CustomDateRange;
   kpis: SalesKPIs;
   timeSeries: SalesTimeSeriesPoint[];
   productRanking: ProductSalesReport[];
